@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'RNPush_Example' do
+  pod 'RNPush', :path => '../'
+
+  target 'RNPush_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end

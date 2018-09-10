@@ -1,0 +1,16 @@
+PODS:
+  - RNPush (0.1.0)
+
+DEPENDENCIES:
+  - RNPush (from `../`)
+
+EXTERNAL SOURCES:
+  RNPush:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  RNPush: 057b869b2fd8ee87adb570d3bd76b3eac5e99b98
+
+PODFILE CHECKSUM: 8863f338e14a81056f789a9e498d85a3da1b6b13
+
+COCOAPODS: 1.5.3

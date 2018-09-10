@@ -1,0 +1,22 @@
+{
+  "name": "RNPush",
+  "version": "0.1.0",
+  "summary": "A short description of RNPush.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/wangcong/RNPush",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "wangcong": "wangcong@medlinker.com"
+  },
+  "source": {
+    "git": "https://github.com/wangcong/RNPush.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "8.0"
+  },
+  "source_files": "RNPush/Classes/**/*"
+}

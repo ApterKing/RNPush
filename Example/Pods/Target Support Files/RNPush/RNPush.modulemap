@@ -1,0 +1,6 @@
+framework module RNPush {
+  umbrella header "RNPush-umbrella.h"
+
+  export *
+  module * { export * }
+}
