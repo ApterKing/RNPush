@@ -14,7 +14,7 @@
             buildForArchiving = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D29EC4D1256D8AD75FCEF2BA1989CB1C"
+               BlueprintIdentifier = "68C45B03F1B951392241F4B46FEFA81A"
                BlueprintName = "RNPush"
                ReferencedContainer = "container:Pods.xcodeproj"
                BuildableName = "RNPush.framework">
