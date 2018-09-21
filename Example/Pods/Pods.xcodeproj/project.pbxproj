@@ -31,6 +31,8 @@
 		6882BBB662DCFD5C366F69FA0960B965 /* prng.h in Headers */ = {isa = PBXBuildFile; fileRef = 53D6F70DCC4A7E0B0CD3C34DBCC7E6DD /* prng.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		6E3A50E2214670230051A0CB /* RNPushDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E3A50E1214670230051A0CB /* RNPushDownloader.swift */; };
 		6E3A50E4214670350051A0CB /* RNPushConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E3A50E3214670350051A0CB /* RNPushConfig.swift */; };
+		6E4E39D12154E88300D65147 /* RNPushManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E4E39D02154E88300D65147 /* RNPushManager.swift */; };
+		6E4E39D32154E89D00D65147 /* RNPushManager+ML.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E4E39D22154E89D00D65147 /* RNPushManager+ML.swift */; };
 		87E1B0817EB7311548A8D4CEC2BF4EF5 /* crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = DDB436CEFCF39DB6E67B94697FD1AC8A /* crypt.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		880506F2007DEB14F14FAE11947ED95F /* brg_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E6594D672471F2A6F3F6CB3C6E847E2 /* brg_endian.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8A44C90FAAE31570E47F3FD35136453B /* ioapi.h in Headers */ = {isa = PBXBuildFile; fileRef = 73BDE9CE5581B07D9D9D93746E3631BB /* ioapi.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -127,6 +129,8 @@
 		6C4C50D1BB85EDEFF321215473889A59 /* unzip.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = unzip.h; path = SSZipArchive/minizip/unzip.h; sourceTree = "<group>"; };
 		6E3A50E1214670230051A0CB /* RNPushDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNPushDownloader.swift; sourceTree = "<group>"; };
 		6E3A50E3214670350051A0CB /* RNPushConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNPushConfig.swift; sourceTree = "<group>"; };
+		6E4E39D02154E88300D65147 /* RNPushManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNPushManager.swift; sourceTree = "<group>"; };
+		6E4E39D22154E89D00D65147 /* RNPushManager+ML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RNPushManager+ML.swift"; sourceTree = "<group>"; };
 		6EA0E52BAE8A020CCB57E7924400FB41 /* RNPush.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; path = RNPush.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		6F2474832636BCBBFCCBFC9D8FC4157D /* SSZipArchive.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SSZipArchive.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		727BD43F951E821F7A8ACB0DA9968B3C /* Pods-RNPush_Example-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-RNPush_Example-umbrella.h"; sourceTree = "<group>"; };
@@ -244,6 +248,8 @@
 				0DA8C8DCE470522707E72E8208FDD954 /* ReplaceMe.swift */,
 				6E3A50E1214670230051A0CB /* RNPushDownloader.swift */,
 				6E3A50E3214670350051A0CB /* RNPushConfig.swift */,
+				6E4E39D02154E88300D65147 /* RNPushManager.swift */,
+				6E4E39D22154E89D00D65147 /* RNPushManager+ML.swift */,
 				7082FD23F1AAE9F45009C8A8E523108F /* Pod */,
 				7CD7ACD7E63C64A85BCA8987484A08FB /* Support Files */,
 			);
@@ -659,8 +665,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E3A50E4214670350051A0CB /* RNPushConfig.swift in Sources */,
+				6E4E39D12154E88300D65147 /* RNPushManager.swift in Sources */,
 				6E3A50E2214670230051A0CB /* RNPushDownloader.swift in Sources */,
 				38F2659FC0765BE3C0AFF1ADEAB16970 /* Pods-RNPush_Example-dummy.m in Sources */,
+				6E4E39D32154E89D00D65147 /* RNPushManager+ML.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
