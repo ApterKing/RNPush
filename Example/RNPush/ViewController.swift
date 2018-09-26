@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import RNPush
 
 class ViewController: UIViewController {
 
@@ -14,7 +15,8 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        let gesture = UIGestureRecognizer(target: self, action: #selector(gestureAction(_:)))
+        let gesture = UITapGestureRecognizer(target: self, action: #selector(gestureAction(_:)))
+        gesture.numberOfTapsRequired = 1
         gesture.delegate = self
         view.addGestureRecognizer(gesture)
         
@@ -26,7 +28,10 @@ class ViewController: UIViewController {
     }
     
     @objc func gestureAction(_ gesture: UIGestureRecognizer) {
-        
+        print("gestureAction")
+        RNPushManager.default.ml_downloadIfNeeded("Base") { (successed) in
+            print("gestureAction -------  \(successed)")
+        }
     }
 
 }

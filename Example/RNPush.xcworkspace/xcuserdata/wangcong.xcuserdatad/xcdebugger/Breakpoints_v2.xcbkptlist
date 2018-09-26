@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   type = "0"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../RNPushManager+ML.swift"
+            timestampString = "559643848.708693"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "25"
+            endingLineNumber = "25"
+            landmarkName = "ml_downloadIfNeeded(_:_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../RNPush/Classes/RNPushManager+ML.swift"
+            timestampString = "559648102.568505"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "72"
+            endingLineNumber = "72"
+            landmarkName = "model(from:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../RNPush/Classes/RNPushManager+ML.swift"
+            timestampString = "559648188.9967771"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "21"
+            endingLineNumber = "21"
+            landmarkName = "ml_downloadIfNeeded(_:_:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Optional&lt;RNPush.RNPushManager.(CheckModel in _63F4DB611B6A910E92B9D4C3BBC6A231)&gt;, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in RNPush.RNPushManager.ml_downloadIfNeeded(Swift.String, (Swift.Bool) -&gt; ()) -&gt; ()"
+                  moduleName = "RNPush"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/wangcong/Develops/Demo/iOS/RNPush/RNPush/Classes/RNPushManager+ML.swift"
+                  timestampString = "559648189.2100331"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "21"
+                  endingLineNumber = "21"
+                  offsetFromSymbolStart = "441">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.String, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in closure #1 (Swift.Optional&lt;RNPush.RNPushManager.(CheckModel in _63F4DB611B6A910E92B9D4C3BBC6A231)&gt;, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in RNPush.RNPushManager.ml_downloadIfNeeded(Swift.String, (Swift.Bool) -&gt; ()) -&gt; ()"
+                  moduleName = "RNPush"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/wangcong/Develops/Demo/iOS/RNPush/RNPush/Classes/RNPushManager+ML.swift"
+                  timestampString = "559648189.211764"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "15"
+                  endingLineNumber = "15"
+                  offsetFromSymbolStart = "41">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>

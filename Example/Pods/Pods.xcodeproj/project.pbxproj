@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01B88BFC6C346FACD5DC4FC71C040A85 /* RNPushManager+ML.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EF0A00BF1493958FD729E539212B1E9 /* RNPushManager+ML.swift */; };
 		02033E07AEB311D0BC75FAD5F23820F5 /* fileenc.h in Headers */ = {isa = PBXBuildFile; fileRef = 816FD18DCD11E6D481681AEF17482B36 /* fileenc.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		0A641D3586A0E04F6BF88F8B9A3E74C9 /* Pods-RNPush_Tests-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 7ECA96AB606EE0C09BC462A2B59F57C6 /* Pods-RNPush_Tests-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0C947E5B5105D2282FD61EE5FB3712EB /* aesopt.h in Headers */ = {isa = PBXBuildFile; fileRef = CA296BC3A968C204404C9DD0D5F66805 /* aesopt.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -27,39 +28,38 @@
 		5A6D00E3CD1831437D7D627F02DF7823 /* fileenc.c in Sources */ = {isa = PBXBuildFile; fileRef = 36006ED0E20B7BF1B34A0092C1CD2E08 /* fileenc.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		61B512F9B1E3585DEDD84C0B6E425B59 /* Pods-RNPush_Tests-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 98EEF557BC391DAD02EDB6D5882EBA63 /* Pods-RNPush_Tests-dummy.m */; };
 		61E42FA11BCB6EBE2BF27301CC97B175 /* aeskey.c in Sources */ = {isa = PBXBuildFile; fileRef = 7F447C9EE44AEF2F079535BEF8649580 /* aeskey.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
+		662ADF40346D5FB5E23097C6655EED0A /* RNPush-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 4828C43AAE8E12FBEAF9C377EABBFCCD /* RNPush-dummy.m */; };
 		678F9C61F40C027FAF30DF6AE6326883 /* hmac.c in Sources */ = {isa = PBXBuildFile; fileRef = AC08EFEB4FD6312CE017A34FA83DAD02 /* hmac.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		6882BBB662DCFD5C366F69FA0960B965 /* prng.h in Headers */ = {isa = PBXBuildFile; fileRef = 53D6F70DCC4A7E0B0CD3C34DBCC7E6DD /* prng.h */; settings = {ATTRIBUTES = (Project, ); }; };
-		6E3A50E2214670230051A0CB /* RNPushDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E3A50E1214670230051A0CB /* RNPushDownloader.swift */; };
-		6E3A50E4214670350051A0CB /* RNPushConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E3A50E3214670350051A0CB /* RNPushConfig.swift */; };
-		6E4E39D12154E88300D65147 /* RNPushManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E4E39D02154E88300D65147 /* RNPushManager.swift */; };
-		6E4E39D32154E89D00D65147 /* RNPushManager+ML.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E4E39D22154E89D00D65147 /* RNPushManager+ML.swift */; };
 		87E1B0817EB7311548A8D4CEC2BF4EF5 /* crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = DDB436CEFCF39DB6E67B94697FD1AC8A /* crypt.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		880506F2007DEB14F14FAE11947ED95F /* brg_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E6594D672471F2A6F3F6CB3C6E847E2 /* brg_endian.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8A44C90FAAE31570E47F3FD35136453B /* ioapi.h in Headers */ = {isa = PBXBuildFile; fileRef = 73BDE9CE5581B07D9D9D93746E3631BB /* ioapi.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8D50D5996D1D24BD9D21CCAFADC5242F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5AFAEAAB8EF90C69E9F39C3850267C53 /* Foundation.framework */; };
-		8EA3E7D1BA8C628C449D08F40A229560 /* ReplaceMe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA8C8DCE470522707E72E8208FDD954 /* ReplaceMe.swift */; };
 		90B8A28CC9FFC529331928394ED04499 /* ioapi_buf.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A6C3CA62F0B57DD79AE3EDEC3E721EB /* ioapi_buf.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		922FBA7479CFC10639BD68097004FCEB /* aes_ni.c in Sources */ = {isa = PBXBuildFile; fileRef = 42F4E66AB19698B2349B55DCA2732489 /* aes_ni.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		9A2B1711AE6950C34919C22F34CDE5C2 /* crypt.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D8167946C07ADF18E51090AD23FF77E /* crypt.h */; settings = {ATTRIBUTES = (Project, ); }; };
-		9DC233C1E12C2126C2BB5A630FCECB7C /* RNPush-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 91F24EB84ACBCEDF1EE4090959E7C826 /* RNPush-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9DC233C1E12C2126C2BB5A630FCECB7C /* RNPush-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 45C9B676E82EF98C579A86E99E8C5B7E /* RNPush-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A2F12CB208125888BDFF4415F8284106 /* aescrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4736157FC0FB5579F88316F6BC95E591 /* aescrypt.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		AE907FEE5FDD0BFED2E1AF5A2B8C3F7C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9680ECF87E076325DAC71A80B3A9D386 /* UIKit.framework */; };
 		AF49DFA73E10DF4EB2FB043B34231663 /* aes.h in Headers */ = {isa = PBXBuildFile; fileRef = ABD36C1265730DB326700DA310FD4E66 /* aes.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		BB732920C25D512BB042CFA937E429E5 /* unzip.h in Headers */ = {isa = PBXBuildFile; fileRef = 6C4C50D1BB85EDEFF321215473889A59 /* unzip.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		C24CA1F382E070731A374710515EF6E6 /* SSZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F00841E12E9B8516896044370A558E /* SSZipArchive.m */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		C27226775139E470A354F3706F3AE5AC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5AFAEAAB8EF90C69E9F39C3850267C53 /* Foundation.framework */; };
+		C43122908515601C2DB2727B20E476FE /* RNPushConfig+ML.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFC5AE040B6B49C96B937D6FC68936CA /* RNPushConfig+ML.swift */; };
 		C9CDE8A14118F3FE5616A3CBB80EAFDA /* SSZipArchive-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 480979755085099EFF48067B3C842892 /* SSZipArchive-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CEB407583F2E38D31CA221FA6317963C /* aestab.h in Headers */ = {isa = PBXBuildFile; fileRef = B4657344196B79A41FA99474D676FB94 /* aestab.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		D15DCF89B0FCB0E4BFBD4E1C5B64487E /* RNPushConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC884EA070298B08A237237F52AB3D5 /* RNPushConfig.swift */; };
 		D41EDF1BCA0916883F92AD5E68099325 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5AFAEAAB8EF90C69E9F39C3850267C53 /* Foundation.framework */; };
 		D4F2872ABB66831C327A7B8461E0B548 /* ioapi.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A3FA58B71C994A2E1DE708DB5C2D0E2 /* ioapi.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		D6368553A301C5DCB455F20988107C52 /* ioapi_mem.h in Headers */ = {isa = PBXBuildFile; fileRef = 9C3B4AE16D27E68A232D059F2094F9E5 /* ioapi_mem.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		D8CF8991B55B01DB46139C1CD3F6426B /* zip.h in Headers */ = {isa = PBXBuildFile; fileRef = AFCAAEBBF9349965002B24D98A46FE2B /* zip.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		DABF10AC5EF14EF3E5A8E00857BA8BE6 /* SSZipCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = FA6FA278A80E555CC4E02AAFDBEB9FF0 /* SSZipCommon.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DE0A8CCD9BEAD6B2AC936DE24BB4D6FC /* ioapi_mem.c in Sources */ = {isa = PBXBuildFile; fileRef = 8CD41EB5A031CBEB516054C89BBABE0E /* ioapi_mem.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
-		DE7E27BA1CBB8EC0D9A1BA5D9F126045 /* RNPush-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 72A10C5544989D96BFC52B7817069310 /* RNPush-dummy.m */; };
+		DEC7C5932F8E91AC19353A73E4911C9C /* RNPushDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26C6AE7824EDF99AC8C0E463D0F4E49F /* RNPushDownloader.swift */; };
 		E14B65DBB5DDAEE6B2B1F7FB68A2EBFF /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = 77DA1F16CC954BC6BE66BA9447E2A153 /* zip.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		EAF0AC0F425178102FAE1CCE893CC1E2 /* minishared.c in Sources */ = {isa = PBXBuildFile; fileRef = 7F36B72D20F0D170EC5DE5FE0636D796 /* minishared.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		EBBB1CA896A765390C01321CCA64EEA2 /* SSZipArchive.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03A90F302A50B055B0352E86A41D3F9D /* SSZipArchive.framework */; };
+		EC186B82A36CD23013CD01AA9771D032 /* RNPushManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31410E68530E66B7B455F2894BEA5176 /* RNPushManager.swift */; };
 		F1577D523F25B8794308AA560C0650C1 /* SSZipArchive.h in Headers */ = {isa = PBXBuildFile; fileRef = A7FCCAF87E1EE2B31F675B02C96C5798 /* SSZipArchive.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F5413A3BD9343A847AD74EF83CFF5CC7 /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = 9C89E4F74DE78548D6C35765D2CA7E5A /* unzip.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		F599967B28D6614B258E219FA88421EE /* SSZipArchive-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = FAFF6ABD71C59912DA0FC6B52E2A57E0 /* SSZipArchive-dummy.m */; };
@@ -99,24 +99,27 @@
 
 /* Begin PBXFileReference section */
 		03A90F302A50B055B0352E86A41D3F9D /* SSZipArchive.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SSZipArchive.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		03BCF323FE14FD6FA1F6D2553DB81786 /* ioapi_buf.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = ioapi_buf.c; path = SSZipArchive/minizip/ioapi_buf.c; sourceTree = "<group>"; };
-		041839278E6D715D335AC6CD00903C70 /* RNPush-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "RNPush-prefix.pch"; sourceTree = "<group>"; };
+		03BCF323FE14FD6FA1F6D2553DB81786 /* ioapi_buf.c */ = {isa = PBXFileReference; includeInIndex = 1; name = ioapi_buf.c; path = SSZipArchive/minizip/ioapi_buf.c; sourceTree = "<group>"; };
 		06333B88FA21E4D0295E2A07286D6A23 /* Pods-RNPush_Example-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-RNPush_Example-frameworks.sh"; sourceTree = "<group>"; };
 		0C7B67D3083006C18575068CB3707276 /* Pods-RNPush_Tests-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-RNPush_Tests-frameworks.sh"; sourceTree = "<group>"; };
-		0DA8C8DCE470522707E72E8208FDD954 /* ReplaceMe.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReplaceMe.swift; path = RNPush/Classes/ReplaceMe.swift; sourceTree = "<group>"; };
-		0F77FA1CB7384E03DC0A21823D43B08A /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
-		21C3DDBC63B005B56B3854F10F1FAF10 /* sha1.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = sha1.c; path = SSZipArchive/minizip/aes/sha1.c; sourceTree = "<group>"; };
-		2DB74E0713455536F359721FD6A97457 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0E3C8A9E601BABC52899ADF48C35F313 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0EC884EA070298B08A237237F52AB3D5 /* RNPushConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RNPushConfig.swift; path = RNPush/Classes/RNPushConfig.swift; sourceTree = "<group>"; };
+		21C3DDBC63B005B56B3854F10F1FAF10 /* sha1.c */ = {isa = PBXFileReference; includeInIndex = 1; name = sha1.c; path = SSZipArchive/minizip/aes/sha1.c; sourceTree = "<group>"; };
+		26C6AE7824EDF99AC8C0E463D0F4E49F /* RNPushDownloader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RNPushDownloader.swift; path = RNPush/Classes/RNPushDownloader.swift; sourceTree = "<group>"; };
 		2DBE2757A55F33287C3B04A181A962C2 /* Pods-RNPush_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-RNPush_Tests.release.xcconfig"; sourceTree = "<group>"; };
+		30D605D6E9035239723868B740C70C0D /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE; sourceTree = "<group>"; };
+		31410E68530E66B7B455F2894BEA5176 /* RNPushManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RNPushManager.swift; path = RNPush/Classes/RNPushManager.swift; sourceTree = "<group>"; };
 		32CCC77F3FF01ABA542434086CB3CBEB /* SSZipArchive.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = SSZipArchive.modulemap; sourceTree = "<group>"; };
 		3447D7E45D2F0C6EB939F27B5CC6E80F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		36006ED0E20B7BF1B34A0092C1CD2E08 /* fileenc.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = fileenc.c; path = SSZipArchive/minizip/aes/fileenc.c; sourceTree = "<group>"; };
-		42752FA259528310DFFC12137DBF8113 /* Pods_RNPush_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RNPush_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		42F4E66AB19698B2349B55DCA2732489 /* aes_ni.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = aes_ni.c; path = SSZipArchive/minizip/aes/aes_ni.c; sourceTree = "<group>"; };
+		36006ED0E20B7BF1B34A0092C1CD2E08 /* fileenc.c */ = {isa = PBXFileReference; includeInIndex = 1; name = fileenc.c; path = SSZipArchive/minizip/aes/fileenc.c; sourceTree = "<group>"; };
+		42752FA259528310DFFC12137DBF8113 /* Pods_RNPush_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_RNPush_Tests.framework; path = "Pods-RNPush_Tests.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		42F4E66AB19698B2349B55DCA2732489 /* aes_ni.c */ = {isa = PBXFileReference; includeInIndex = 1; name = aes_ni.c; path = SSZipArchive/minizip/aes/aes_ni.c; sourceTree = "<group>"; };
 		448AF3D2EE4035FD3E4D5BC430837AC1 /* brg_types.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = brg_types.h; path = SSZipArchive/minizip/aes/brg_types.h; sourceTree = "<group>"; };
-		4736157FC0FB5579F88316F6BC95E591 /* aescrypt.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = aescrypt.c; path = SSZipArchive/minizip/aes/aescrypt.c; sourceTree = "<group>"; };
-		475E0A0FF2DACFCE1C9182665B8313B0 /* aestab.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = aestab.c; path = SSZipArchive/minizip/aes/aestab.c; sourceTree = "<group>"; };
+		45C9B676E82EF98C579A86E99E8C5B7E /* RNPush-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "RNPush-umbrella.h"; sourceTree = "<group>"; };
+		4736157FC0FB5579F88316F6BC95E591 /* aescrypt.c */ = {isa = PBXFileReference; includeInIndex = 1; name = aescrypt.c; path = SSZipArchive/minizip/aes/aescrypt.c; sourceTree = "<group>"; };
+		475E0A0FF2DACFCE1C9182665B8313B0 /* aestab.c */ = {isa = PBXFileReference; includeInIndex = 1; name = aestab.c; path = SSZipArchive/minizip/aes/aestab.c; sourceTree = "<group>"; };
 		480979755085099EFF48067B3C842892 /* SSZipArchive-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SSZipArchive-umbrella.h"; sourceTree = "<group>"; };
+		4828C43AAE8E12FBEAF9C377EABBFCCD /* RNPush-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "RNPush-dummy.m"; sourceTree = "<group>"; };
 		4B51BA79FE286DC137BA9B0DD3C4D579 /* hmac.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = hmac.h; path = SSZipArchive/minizip/aes/hmac.h; sourceTree = "<group>"; };
 		4E6594D672471F2A6F3F6CB3C6E847E2 /* brg_endian.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = brg_endian.h; path = SSZipArchive/minizip/aes/brg_endian.h; sourceTree = "<group>"; };
 		53D6F70DCC4A7E0B0CD3C34DBCC7E6DD /* prng.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = prng.h; path = SSZipArchive/minizip/aes/prng.h; sourceTree = "<group>"; };
@@ -127,63 +130,60 @@
 		69E48033A598055CB40BE3B0EB84E365 /* Pods-RNPush_Tests-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-RNPush_Tests-acknowledgements.markdown"; sourceTree = "<group>"; };
 		6A585AACC977C8AF5BFACEDC3F2727E3 /* Pods-RNPush_Tests-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-RNPush_Tests-acknowledgements.plist"; sourceTree = "<group>"; };
 		6C4C50D1BB85EDEFF321215473889A59 /* unzip.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = unzip.h; path = SSZipArchive/minizip/unzip.h; sourceTree = "<group>"; };
-		6E3A50E1214670230051A0CB /* RNPushDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNPushDownloader.swift; sourceTree = "<group>"; };
-		6E3A50E3214670350051A0CB /* RNPushConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNPushConfig.swift; sourceTree = "<group>"; };
-		6E4E39D02154E88300D65147 /* RNPushManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNPushManager.swift; sourceTree = "<group>"; };
-		6E4E39D22154E89D00D65147 /* RNPushManager+ML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RNPushManager+ML.swift"; sourceTree = "<group>"; };
-		6EA0E52BAE8A020CCB57E7924400FB41 /* RNPush.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; path = RNPush.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		6F2474832636BCBBFCCBFC9D8FC4157D /* SSZipArchive.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SSZipArchive.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F2474832636BCBBFCCBFC9D8FC4157D /* SSZipArchive.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = SSZipArchive.framework; path = SSZipArchive.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		727BD43F951E821F7A8ACB0DA9968B3C /* Pods-RNPush_Example-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-RNPush_Example-umbrella.h"; sourceTree = "<group>"; };
-		72A10C5544989D96BFC52B7817069310 /* RNPush-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "RNPush-dummy.m"; sourceTree = "<group>"; };
 		73BDE9CE5581B07D9D9D93746E3631BB /* ioapi.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ioapi.h; path = SSZipArchive/minizip/ioapi.h; sourceTree = "<group>"; };
-		77DA1F16CC954BC6BE66BA9447E2A153 /* zip.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = zip.c; path = SSZipArchive/minizip/zip.c; sourceTree = "<group>"; };
-		7A3FA58B71C994A2E1DE708DB5C2D0E2 /* ioapi.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = ioapi.c; path = SSZipArchive/minizip/ioapi.c; sourceTree = "<group>"; };
+		77DA1F16CC954BC6BE66BA9447E2A153 /* zip.c */ = {isa = PBXFileReference; includeInIndex = 1; name = zip.c; path = SSZipArchive/minizip/zip.c; sourceTree = "<group>"; };
+		7A3FA58B71C994A2E1DE708DB5C2D0E2 /* ioapi.c */ = {isa = PBXFileReference; includeInIndex = 1; name = ioapi.c; path = SSZipArchive/minizip/ioapi.c; sourceTree = "<group>"; };
 		7D8167946C07ADF18E51090AD23FF77E /* crypt.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = crypt.h; path = SSZipArchive/minizip/crypt.h; sourceTree = "<group>"; };
 		7ECA96AB606EE0C09BC462A2B59F57C6 /* Pods-RNPush_Tests-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-RNPush_Tests-umbrella.h"; sourceTree = "<group>"; };
-		7F36B72D20F0D170EC5DE5FE0636D796 /* minishared.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = minishared.c; path = SSZipArchive/minizip/minishared.c; sourceTree = "<group>"; };
-		7F447C9EE44AEF2F079535BEF8649580 /* aeskey.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = aeskey.c; path = SSZipArchive/minizip/aes/aeskey.c; sourceTree = "<group>"; };
+		7EF0A00BF1493958FD729E539212B1E9 /* RNPushManager+ML.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "RNPushManager+ML.swift"; path = "RNPush/Classes/RNPushManager+ML.swift"; sourceTree = "<group>"; };
+		7F36B72D20F0D170EC5DE5FE0636D796 /* minishared.c */ = {isa = PBXFileReference; includeInIndex = 1; name = minishared.c; path = SSZipArchive/minizip/minishared.c; sourceTree = "<group>"; };
+		7F447C9EE44AEF2F079535BEF8649580 /* aeskey.c */ = {isa = PBXFileReference; includeInIndex = 1; name = aeskey.c; path = SSZipArchive/minizip/aes/aeskey.c; sourceTree = "<group>"; };
 		816FD18DCD11E6D481681AEF17482B36 /* fileenc.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = fileenc.h; path = SSZipArchive/minizip/aes/fileenc.h; sourceTree = "<group>"; };
 		85646E439D1F414EA902646352228FC1 /* minishared.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = minishared.h; path = SSZipArchive/minizip/minishared.h; sourceTree = "<group>"; };
 		8B67F498357CD797B62116493AD171CE /* Pods-RNPush_Example.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-RNPush_Example.modulemap"; sourceTree = "<group>"; };
 		8BEC7A9CF06FE7DD7B7313AEC0702BF7 /* Pods-RNPush_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-RNPush_Tests.debug.xcconfig"; sourceTree = "<group>"; };
-		8CD41EB5A031CBEB516054C89BBABE0E /* ioapi_mem.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = ioapi_mem.c; path = SSZipArchive/minizip/ioapi_mem.c; sourceTree = "<group>"; };
+		8CD41EB5A031CBEB516054C89BBABE0E /* ioapi_mem.c */ = {isa = PBXFileReference; includeInIndex = 1; name = ioapi_mem.c; path = SSZipArchive/minizip/ioapi_mem.c; sourceTree = "<group>"; };
 		8FEF4516755DCC0DFA9361725B141488 /* Pods-RNPush_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-RNPush_Example.release.xcconfig"; sourceTree = "<group>"; };
-		91F24EB84ACBCEDF1EE4090959E7C826 /* RNPush-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "RNPush-umbrella.h"; sourceTree = "<group>"; };
-		93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		944734ED17847CB059C4D62C92CBE349 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9680ECF87E076325DAC71A80B3A9D386 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS11.3.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		98EEF557BC391DAD02EDB6D5882EBA63 /* Pods-RNPush_Tests-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-RNPush_Tests-dummy.m"; sourceTree = "<group>"; };
 		9A6C3CA62F0B57DD79AE3EDEC3E721EB /* ioapi_buf.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ioapi_buf.h; path = SSZipArchive/minizip/ioapi_buf.h; sourceTree = "<group>"; };
 		9C3B4AE16D27E68A232D059F2094F9E5 /* ioapi_mem.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ioapi_mem.h; path = SSZipArchive/minizip/ioapi_mem.h; sourceTree = "<group>"; };
-		9C89E4F74DE78548D6C35765D2CA7E5A /* unzip.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = unzip.c; path = SSZipArchive/minizip/unzip.c; sourceTree = "<group>"; };
+		9C89E4F74DE78548D6C35765D2CA7E5A /* unzip.c */ = {isa = PBXFileReference; includeInIndex = 1; name = unzip.c; path = SSZipArchive/minizip/unzip.c; sourceTree = "<group>"; };
 		9C958F28F20DC236142612D32600C64E /* aes_ni.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = aes_ni.h; path = SSZipArchive/minizip/aes/aes_ni.h; sourceTree = "<group>"; };
+		9D62E39F9B5E561EE870DDE43659B8EE /* RNPush.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = RNPush.xcconfig; sourceTree = "<group>"; };
 		9DE1B589F595D7A59E24C362F64A3D05 /* Pods-RNPush_Example-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-RNPush_Example-acknowledgements.markdown"; sourceTree = "<group>"; };
 		A0A4F98276374E160F53A3095F674373 /* Pods-RNPush_Example-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-RNPush_Example-dummy.m"; sourceTree = "<group>"; };
 		A7FCCAF87E1EE2B31F675B02C96C5798 /* SSZipArchive.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = SSZipArchive.h; path = SSZipArchive/SSZipArchive.h; sourceTree = "<group>"; };
 		ABD36C1265730DB326700DA310FD4E66 /* aes.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = aes.h; path = SSZipArchive/minizip/aes/aes.h; sourceTree = "<group>"; };
-		AC08EFEB4FD6312CE017A34FA83DAD02 /* hmac.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = hmac.c; path = SSZipArchive/minizip/aes/hmac.c; sourceTree = "<group>"; };
+		AC08EFEB4FD6312CE017A34FA83DAD02 /* hmac.c */ = {isa = PBXFileReference; includeInIndex = 1; name = hmac.c; path = SSZipArchive/minizip/aes/hmac.c; sourceTree = "<group>"; };
 		AC32F73C33494A33F967895AE1E95728 /* Pods-RNPush_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-RNPush_Example.debug.xcconfig"; sourceTree = "<group>"; };
-		AC43E0F74EE38AA1541BA4BBC2AD9EF8 /* RNPush.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RNPush.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC43E0F74EE38AA1541BA4BBC2AD9EF8 /* RNPush.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = RNPush.framework; path = RNPush.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC45C6C3553EF25DD6633F595572B5F4 /* sha1.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = sha1.h; path = SSZipArchive/minizip/aes/sha1.h; sourceTree = "<group>"; };
 		AFCAAEBBF9349965002B24D98A46FE2B /* zip.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = zip.h; path = SSZipArchive/minizip/zip.h; sourceTree = "<group>"; };
 		B0BB3AE54C79579AFD75700F902B5FAE /* pwd2key.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = pwd2key.h; path = SSZipArchive/minizip/aes/pwd2key.h; sourceTree = "<group>"; };
 		B4657344196B79A41FA99474D676FB94 /* aestab.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = aestab.h; path = SSZipArchive/minizip/aes/aestab.h; sourceTree = "<group>"; };
-		B5A45F69E972638E3CB7C90BB03A959B /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		B69E7D6494F1571BC824CF8AC82FE63E /* pwd2key.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = pwd2key.c; path = SSZipArchive/minizip/aes/pwd2key.c; sourceTree = "<group>"; };
-		B767A7773FC57D40D9C3B207321395A5 /* Pods_RNPush_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RNPush_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		B88EA1F1512BFC9A725F213A2784DFA5 /* RNPush.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = RNPush.modulemap; sourceTree = "<group>"; };
+		B69E7D6494F1571BC824CF8AC82FE63E /* pwd2key.c */ = {isa = PBXFileReference; includeInIndex = 1; name = pwd2key.c; path = SSZipArchive/minizip/aes/pwd2key.c; sourceTree = "<group>"; };
+		B767A7773FC57D40D9C3B207321395A5 /* Pods_RNPush_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_RNPush_Example.framework; path = "Pods-RNPush_Example.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8F00841E12E9B8516896044370A558E /* SSZipArchive.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = SSZipArchive.m; path = SSZipArchive/SSZipArchive.m; sourceTree = "<group>"; };
 		BEC15F75D061FD1CC912F5844320AC5B /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C0187C57153A701178AB6A052CB639DF /* SSZipArchive-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SSZipArchive-prefix.pch"; sourceTree = "<group>"; };
-		C882D1F1AE37DDA4EAA6B381A85E5D47 /* RNPush.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = RNPush.xcconfig; sourceTree = "<group>"; };
+		C12D5600E13EA31402F0349FCFFD9875 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; path = README.md; sourceTree = "<group>"; };
+		C46140126F56195AA099F9A9589DF181 /* RNPush.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = RNPush.modulemap; sourceTree = "<group>"; };
 		CA296BC3A968C204404C9DD0D5F66805 /* aesopt.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = aesopt.h; path = SSZipArchive/minizip/aes/aesopt.h; sourceTree = "<group>"; };
 		CCCA561A2547088B24D200860B00620E /* Pods-RNPush_Example-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-RNPush_Example-resources.sh"; sourceTree = "<group>"; };
+		CD9F033825508CA91D034E96336947D8 /* RNPush.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; lastKnownFileType = text; path = RNPush.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		D085D35C0787790CF3CDD63ED6527BEB /* Pods-RNPush_Tests.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-RNPush_Tests.modulemap"; sourceTree = "<group>"; };
-		DDB436CEFCF39DB6E67B94697FD1AC8A /* crypt.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = crypt.c; path = SSZipArchive/minizip/crypt.c; sourceTree = "<group>"; };
-		E33B4E2BBE0158145D2CACA981B8E23C /* prng.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = prng.c; path = SSZipArchive/minizip/aes/prng.c; sourceTree = "<group>"; };
+		DDB436CEFCF39DB6E67B94697FD1AC8A /* crypt.c */ = {isa = PBXFileReference; includeInIndex = 1; name = crypt.c; path = SSZipArchive/minizip/crypt.c; sourceTree = "<group>"; };
+		E33B4E2BBE0158145D2CACA981B8E23C /* prng.c */ = {isa = PBXFileReference; includeInIndex = 1; name = prng.c; path = SSZipArchive/minizip/aes/prng.c; sourceTree = "<group>"; };
+		E4FFF62EB9817E06954C4F315E87FFE5 /* RNPush-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "RNPush-prefix.pch"; sourceTree = "<group>"; };
 		EAD3E66C06EEE51F2544034F02942E85 /* SSZipArchive.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = SSZipArchive.xcconfig; sourceTree = "<group>"; };
 		FA6FA278A80E555CC4E02AAFDBEB9FF0 /* SSZipCommon.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = SSZipCommon.h; path = SSZipArchive/SSZipCommon.h; sourceTree = "<group>"; };
 		FAFF6ABD71C59912DA0FC6B52E2A57E0 /* SSZipArchive-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "SSZipArchive-dummy.m"; sourceTree = "<group>"; };
+		FFC5AE040B6B49C96B937D6FC68936CA /* RNPushConfig+ML.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "RNPushConfig+ML.swift"; path = "RNPush/Classes/RNPushConfig+ML.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -224,6 +224,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		12050610276C091DD8668BE3D27C51E3 /* Support Files */ = {
+			isa = PBXGroup;
+			children = (
+				0E3C8A9E601BABC52899ADF48C35F313 /* Info.plist */,
+				C46140126F56195AA099F9A9589DF181 /* RNPush.modulemap */,
+				9D62E39F9B5E561EE870DDE43659B8EE /* RNPush.xcconfig */,
+				4828C43AAE8E12FBEAF9C377EABBFCCD /* RNPush-dummy.m */,
+				E4FFF62EB9817E06954C4F315E87FFE5 /* RNPush-prefix.pch */,
+				45C9B676E82EF98C579A86E99E8C5B7E /* RNPush-umbrella.h */,
+			);
+			name = "Support Files";
+			path = "Example/Pods/Target Support Files/RNPush";
+			sourceTree = "<group>";
+		};
 		1DCD937DA39884FFD75F5225D550DD94 /* Pods-RNPush_Example */ = {
 			isa = PBXGroup;
 			children = (
@@ -240,21 +254,6 @@
 			);
 			name = "Pods-RNPush_Example";
 			path = "Target Support Files/Pods-RNPush_Example";
-			sourceTree = "<group>";
-		};
-		1E93D07A868A9E0E38AC00F2AA499719 /* RNPush */ = {
-			isa = PBXGroup;
-			children = (
-				0DA8C8DCE470522707E72E8208FDD954 /* ReplaceMe.swift */,
-				6E3A50E1214670230051A0CB /* RNPushDownloader.swift */,
-				6E3A50E3214670350051A0CB /* RNPushConfig.swift */,
-				6E4E39D02154E88300D65147 /* RNPushManager.swift */,
-				6E4E39D22154E89D00D65147 /* RNPushManager+ML.swift */,
-				7082FD23F1AAE9F45009C8A8E523108F /* Pod */,
-				7CD7ACD7E63C64A85BCA8987484A08FB /* Support Files */,
-			);
-			name = RNPush;
-			path = ../..;
 			sourceTree = "<group>";
 		};
 		37825C941A649843DBAF12FF32836639 /* Support Files */ = {
@@ -280,6 +279,16 @@
 			name = iOS;
 			sourceTree = "<group>";
 		};
+		4BF321C4034EF37312BC2E23200523B8 /* Pod */ = {
+			isa = PBXGroup;
+			children = (
+				30D605D6E9035239723868B740C70C0D /* LICENSE */,
+				C12D5600E13EA31402F0349FCFFD9875 /* README.md */,
+				CD9F033825508CA91D034E96336947D8 /* RNPush.podspec */,
+			);
+			name = Pod;
+			sourceTree = "<group>";
+		};
 		4F145446B1368F3E3D7B8B3E2EE155E1 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -288,35 +297,11 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
-		7082FD23F1AAE9F45009C8A8E523108F /* Pod */ = {
-			isa = PBXGroup;
-			children = (
-				0F77FA1CB7384E03DC0A21823D43B08A /* LICENSE */,
-				B5A45F69E972638E3CB7C90BB03A959B /* README.md */,
-				6EA0E52BAE8A020CCB57E7924400FB41 /* RNPush.podspec */,
-			);
-			name = Pod;
-			sourceTree = "<group>";
-		};
-		7CD7ACD7E63C64A85BCA8987484A08FB /* Support Files */ = {
-			isa = PBXGroup;
-			children = (
-				2DB74E0713455536F359721FD6A97457 /* Info.plist */,
-				B88EA1F1512BFC9A725F213A2784DFA5 /* RNPush.modulemap */,
-				C882D1F1AE37DDA4EAA6B381A85E5D47 /* RNPush.xcconfig */,
-				72A10C5544989D96BFC52B7817069310 /* RNPush-dummy.m */,
-				041839278E6D715D335AC6CD00903C70 /* RNPush-prefix.pch */,
-				91F24EB84ACBCEDF1EE4090959E7C826 /* RNPush-umbrella.h */,
-			);
-			name = "Support Files";
-			path = "Example/Pods/Target Support Files/RNPush";
-			sourceTree = "<group>";
-		};
 		7DB346D0F39D3F0E887471402A8071AB = {
 			isa = PBXGroup;
 			children = (
 				93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */,
-				CD8A87BF7D0C3BE8DF60690C3A27F7F2 /* Development Pods */,
+				E6CC46CCBE1F418710156AD7F43456FA /* Development Pods */,
 				ABA0F136EF94F0C19D3527641F6423F3 /* Frameworks */,
 				4F145446B1368F3E3D7B8B3E2EE155E1 /* Pods */,
 				87436837F12D495D074BA5E31EFBFF9D /* Products */,
@@ -387,6 +372,7 @@
 				582CC59F4056E635B58BBFD852B9441D /* ZipArchive.h */,
 				37825C941A649843DBAF12FF32836639 /* Support Files */,
 			);
+			name = SSZipArchive;
 			path = SSZipArchive;
 			sourceTree = "<group>";
 		};
@@ -417,12 +403,27 @@
 			path = "Target Support Files/Pods-RNPush_Tests";
 			sourceTree = "<group>";
 		};
-		CD8A87BF7D0C3BE8DF60690C3A27F7F2 /* Development Pods */ = {
+		E6CC46CCBE1F418710156AD7F43456FA /* Development Pods */ = {
 			isa = PBXGroup;
 			children = (
-				1E93D07A868A9E0E38AC00F2AA499719 /* RNPush */,
+				EC478A251F32080EF31E095792A6CEB7 /* RNPush */,
 			);
 			name = "Development Pods";
+			sourceTree = "<group>";
+		};
+		EC478A251F32080EF31E095792A6CEB7 /* RNPush */ = {
+			isa = PBXGroup;
+			children = (
+				0EC884EA070298B08A237237F52AB3D5 /* RNPushConfig.swift */,
+				FFC5AE040B6B49C96B937D6FC68936CA /* RNPushConfig+ML.swift */,
+				26C6AE7824EDF99AC8C0E463D0F4E49F /* RNPushDownloader.swift */,
+				31410E68530E66B7B455F2894BEA5176 /* RNPushManager.swift */,
+				7EF0A00BF1493958FD729E539212B1E9 /* RNPushManager+ML.swift */,
+				4BF321C4034EF37312BC2E23200523B8 /* Pod */,
+				12050610276C091DD8668BE3D27C51E3 /* Support Files */,
+			);
+			name = RNPush;
+			path = ../..;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -489,7 +490,7 @@
 			buildConfigurationList = D8FC52D9D111929F08E144906AA645F6 /* Build configuration list for PBXNativeTarget "RNPush" */;
 			buildPhases = (
 				D65BE66F384E27AC864EF4D69869C4DF /* Headers */,
-				303F153F6276E85C949D9931DB11FBFA /* Sources */,
+				AD9BDDA6743BA6314F195D5927F82DFC /* Sources */,
 				10406C9856293BE7821681DA2E5208A0 /* Frameworks */,
 				F6CAFD3443110F1BD13E0F270A073F1D /* Resources */,
 			);
@@ -568,11 +569,6 @@
 			attributes = {
 				LastSwiftUpdateCheck = 0930;
 				LastUpgradeCheck = 0930;
-				TargetAttributes = {
-					A21FCE3F9B85175BB6B77BF7B836D47F = {
-						LastSwiftMigration = 0940;
-					};
-				};
 			};
 			buildConfigurationList = 2D8E8EC45A3A1A1D94AE762CB5028504 /* Build configuration list for PBXProject "Pods" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -626,15 +622,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		303F153F6276E85C949D9931DB11FBFA /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				8EA3E7D1BA8C628C449D08F40A229560 /* ReplaceMe.swift in Sources */,
-				DE7E27BA1CBB8EC0D9A1BA5D9F126045 /* RNPush-dummy.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		47F8536C8E9AC0A01B981DB50A8E6381 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -664,11 +651,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6E3A50E4214670350051A0CB /* RNPushConfig.swift in Sources */,
-				6E4E39D12154E88300D65147 /* RNPushManager.swift in Sources */,
-				6E3A50E2214670230051A0CB /* RNPushDownloader.swift in Sources */,
 				38F2659FC0765BE3C0AFF1ADEAB16970 /* Pods-RNPush_Example-dummy.m in Sources */,
-				6E4E39D32154E89D00D65147 /* RNPushManager+ML.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -677,6 +660,19 @@
 			buildActionMask = 2147483647;
 			files = (
 				61B512F9B1E3585DEDD84C0B6E425B59 /* Pods-RNPush_Tests-dummy.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD9BDDA6743BA6314F195D5927F82DFC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				662ADF40346D5FB5E23097C6655EED0A /* RNPush-dummy.m in Sources */,
+				C43122908515601C2DB2727B20E476FE /* RNPushConfig+ML.swift in Sources */,
+				D15DCF89B0FCB0E4BFBD4E1C5B64487E /* RNPushConfig.swift in Sources */,
+				DEC7C5932F8E91AC19353A73E4911C9C /* RNPushDownloader.swift in Sources */,
+				01B88BFC6C346FACD5DC4FC71C040A85 /* RNPushManager+ML.swift in Sources */,
+				EC186B82A36CD23013CD01AA9771D032 /* RNPushManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -968,7 +964,6 @@
 			baseConfigurationReference = AC32F73C33494A33F967895AE1E95728 /* Pods-RNPush_Example.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
@@ -993,7 +988,6 @@
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -1002,7 +996,7 @@
 		};
 		E891530979E384BA8FD8FCD7D7E5876D /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C882D1F1AE37DDA4EAA6B381A85E5D47 /* RNPush.xcconfig */;
+			baseConfigurationReference = 9D62E39F9B5E561EE870DDE43659B8EE /* RNPush.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -1024,7 +1018,8 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -1035,7 +1030,7 @@
 		};
 		EF7AD6D060ADE941B19E347D1362C06E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C882D1F1AE37DDA4EAA6B381A85E5D47 /* RNPush.xcconfig */;
+			baseConfigurationReference = 9D62E39F9B5E561EE870DDE43659B8EE /* RNPush.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
@@ -1070,7 +1065,6 @@
 			baseConfigurationReference = 8FEF4516755DCC0DFA9361725B141488 /* Pods-RNPush_Example.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
@@ -1093,8 +1087,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 3.0;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
