@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    html,
+    body {
+      background: #fff;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    canvas {
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" style="background: #fff">
+  </canvas>
+
+  <script>
+    var canvas = document.getElementById('canvas')
+    var ctx = canvas.getContext('2d');
+
+    var inited = false;
+    var touching = false;
+    var edited = false; // 是否编辑过
+    canvas.addEventListener('touchstart', function (e) {
+      var touch = e.changedTouches[0];
+      ctx.beginPath();
+      ctx.moveTo(Math.round(touch.clientX), Math.round(touch.clientY));
+      e.preventDefault();
+    });
+
+    var rafThrottle = function (fn) {
+      var ticking = false;
+
+      return function () {
+        var args = arguments;
+        if (!ticking) {
+          requestAnimationFrame(function () {
+            ticking = false;
+            fn && fn.apply(this, args);
+          });
+        }
+        ticking = true;
+      }
+    };
+
+    canvas.addEventListener('touchmove', rafThrottle(function (e) {
+      if (!inited) return;
+      var touch = e.changedTouches[0];
+      var clientX = Math.round(touch.clientX);
+      var clientY = Math.round(touch.clientY);
+      ctx.lineTo(clientX, clientY);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#d8262a';
+      ctx.stroke();
+      ctx.moveTo(clientX, clientY);
+      edited = true;
+    }));
+
+    function init() {
+      var ratio = window.webkitDevicePixelRatio || window.devicePixelRatio || 2;
+      canvas.height = window.innerHeight * ratio;
+      canvas.width = window.innerWidth * ratio;
+      ctx.scale(ratio, ratio);
+      ctx.lineJoin = 'round';
+      ctx.lineCap = "round";
+      inited = true;
+      clear();
+    }
+
+    function clear() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.rect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.restore();
+      ctx.moveTo(0, 0);
+      edited = false;
+    }
+
+    function postData() {
+      // 没有编辑过
+      if (!edited) {
+        window.postMessage(JSON.stringify({ type: 'imageData', data: '' }), '*');
+        return;
+      }
+      var base64 = canvas.toDataURL('image/jpeg', 0.8);
+      window.postMessage(JSON.stringify({ type: 'imageData', data: base64 }), '*');
+    }
+
+    document.addEventListener('message', function (e) {
+      var data = JSON.parse(e.data);
+      switch (data.type) {
+        case 'init':
+          init();
+          break;
+        case 'clear':
+          clear();
+          break;
+        case 'getImageData':
+          postData();
+          break;
+      }
+    });
+
+    window.onresize = init;
+  </script>
+</body>
+
+</html>

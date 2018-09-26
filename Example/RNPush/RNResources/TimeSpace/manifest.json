@@ -1,0 +1,18 @@
+{
+  "appVersion": "6.5.0",
+  "minAppVersion": "6.2.0",
+  "buildHash": "Kw1ZEDakWJRJywqo5_92eqRysXwWMulwC0fikMmPNaU=",
+  "routes": [
+    "TSHome",
+    "TSPublish",
+    "TSDetails",
+    "TSMessageList",
+    "TSAddressList",
+    "TSShareCard",
+    "TSTopicDetails",
+    "TSPreviousTopics"
+  ],
+  "dependency": [
+    "Base"
+  ]
+}

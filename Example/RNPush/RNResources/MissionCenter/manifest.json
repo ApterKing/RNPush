@@ -1,0 +1,13 @@
+{
+  "appVersion": "6.5.0",
+  "minAppVersion": "6.2.0",
+  "buildHash": "0iqyvND6YDfvi30m0LrHWyltfJ2uthc4EEqZIbVvLqw=",
+  "routes": [
+    "CSMyNameCard",
+    "CSHome",
+    "CSQuestion"
+  ],
+  "dependency": [
+    "Base"
+  ]
+}

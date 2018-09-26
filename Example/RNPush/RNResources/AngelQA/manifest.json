@@ -1,0 +1,24 @@
+{
+  "appVersion": "6.5.0",
+  "minAppVersion": "6.3.0",
+  "buildHash": "lOuopxaiMRHwo_PIo4Z_VCc+zWrwP0d6XJNSjARQYeI=",
+  "routes": [
+    "AQAHome",
+    "AQAPlayGame",
+    "AQRankingList",
+    "AQMissionCenter",
+    "AQPersonCenter",
+    "AQActiveRulePage",
+    "AQAchievementDetailListPage",
+    "AQAchievementListPage",
+    "AQLevelDetail",
+    "AQResultShare",
+    "AQAFriendBattleHome",
+    "AQAFriendBattleRule",
+    "AQAFriendBattleGame",
+    "AQAFriendBattleRanking"
+  ],
+  "dependency": [
+    "Base"
+  ]
+}

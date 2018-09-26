@@ -1,0 +1,19 @@
+{
+  "appVersion": "6.5.0",
+  "minAppVersion": "6.2.0",
+  "buildHash": "MNo_ktHuz7oqv40oXAtB3W+j0Od9ZRKhHlg9z0i83kE=",
+  "routes": [
+    "IRVerifyHanding",
+    "IRSubmitSuccess",
+    "IRPhysicianCertification",
+    "IRAgreeInquiry",
+    "IRAgreePrescribe",
+    "IRAgreeMulti",
+    "IRQualificationProof",
+    "IRMultiPointWorkRecord",
+    "IRSearchHospital"
+  ],
+  "dependency": [
+    "Base"
+  ]
+}

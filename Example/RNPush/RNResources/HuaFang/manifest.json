@@ -1,0 +1,17 @@
+{
+  "appVersion": "6.5.0",
+  "minAppVersion": "6.2.0",
+  "buildHash": "LGD_hPIuxhmc_tZZ61jqROA2Sw90ZcCnt3ollDpCvvM=",
+  "routes": [
+    "HFRecipeEdit",
+    "HFRecipeDetails",
+    "HFPrescriptionUsage",
+    "HFSignatureStatus",
+    "HFRecipeQrcode",
+    "HFSettings",
+    "HFSignatureStatus"
+  ],
+  "dependency": [
+    "Base"
+  ]
+}
