@@ -7,15 +7,26 @@
 //
 
 import UIKit
+import RNPush
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+//        #if DEBUG
+        RNPushManager.register(serverUrl: "http://pm.qa.medlinker.com/api",
+                               deploymentKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibWVkLXJuLWlvcyIsImVudiI6ImRldmVsb3BtZW50IiwiaWF0IjoxNTMwNjk3MzAyfQ.43XEuT6zm8l9OSiwGoPzDYNl6ULHzBgwCs5U9yNo6r0",
+                               bundleResource: "RNResources")
+//        #else
+//        RNPushManager.register(serverUrl: "https://pm.medlinker.com/api/",
+//                               deploymentKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibWVkLXJuLWlvcyIsImVudiI6InByb2R1Y3Rpb24iLCJpYXQiOjE1MzA2OTczMDJ9.JTtq93c1a-ysiS_kUCZhuvgtRK0_rVJkIvn_968LJPI",
+//                               bundleResource: "RNResources")
+//        #endif
+
         return true
     }
 

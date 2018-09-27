@@ -14,12 +14,14 @@ class RNPushDownloader: NSObject {
     
     fileprivate var progressHandler: progressHandler?
     fileprivate var completionHandler: completionHandler?
-    fileprivate var filePath: String?
+    fileprivate var urlPath: String!
+    fileprivate var filePath: String!
     
     fileprivate var task: URLSessionDownloadTask?
     
-    static func download(urlPath: String, save filePath: String?, progress: progressHandler?, completion: completionHandler?) {
+    static func download(urlPath: String, save filePath: String, progress: progressHandler?, completion: completionHandler?) {
         let downloader = RNPushDownloader()
+        downloader.urlPath = urlPath
         downloader.filePath = filePath
         downloader.progressHandler = progress
         downloader.completionHandler = completion
@@ -29,10 +31,8 @@ class RNPushDownloader: NSObject {
     
     private func _download(_ urlPath: String) {
         guard let url = URL(string: urlPath) else { return }
-        
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
-        
         #if DEBUG
         NSLog("RNPushDownloader  download from: \(urlPath)")
         #endif
@@ -41,7 +41,10 @@ class RNPushDownloader: NSObject {
     }
     
     deinit {
-        task?.cancel()
+        let state = task?.state ?? .running
+        if state == .running || state == .suspended {
+            task?.cancel()
+        }
     }
     
 }
@@ -58,37 +61,27 @@ extension RNPushDownloader: URLSessionDownloadDelegate {
     
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         do {
-            var url = location
             #if DEBUG
             NSLog("RNPushDownloader didFinishDownloadingTo location:  \(location.path)   \(location.pathExtension)")
             #endif
-            // 指定了存储的地址，则需重新写入文件
-            if let path = filePath {
-                let data = try Data(contentsOf: location)
-                url = URL(fileURLWithPath: path, isDirectory: false)
-                
-                // 检查extension是否匹配
-                if url.pathExtension != location.pathExtension {
-                    url = url.deletingPathExtension()
-                    url.appendPathExtension(location.pathExtension)
-                }
-                try data.write(to: url, options: Data.WritingOptions.atomicWrite)
-            }
+            
+            let data = NSData(contentsOf: location)
+            try data?.write(toFile: filePath, options: .atomicWrite)
+
             #if DEBUG
-            NSLog("RNPushDownloader  didFinishDownloadingTo save to:  \(url.path)   \(url.pathExtension)")
+            NSLog("RNPushDownloader  didFinishDownloadingTo save to:  \(filePath)")
             #endif
-            filePath = url.path
-            self.completionHandler?(filePath ?? "", nil)
+            self.completionHandler?(filePath, nil)
         } catch let error {
-            self.completionHandler?(filePath ?? "", error)
+            self.completionHandler?(filePath, error)
         }
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        
         #if EDBUG
         NSLog("RNPushDownloader didCompleteWithError: \(String(describing: error))")
         #endif
-        self.completionHandler?(filePath ?? "", error)
+        
+        self.completionHandler?(filePath, error)
     }
 }

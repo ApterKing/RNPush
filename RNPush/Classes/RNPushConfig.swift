@@ -26,17 +26,25 @@ class RNPushConfig: NSObject {
         
         if let infoDictionary = Bundle.main.infoDictionary {
             deploymentKey = infoDictionary["RNPushDeploymentKey"] as? String ?? ""
-            appVersion = infoDictionary["CFBundleShortVersionString"] as? String ?? ""
-            buildVersion = infoDictionary["CFBundleVersion"] as? String ?? ""
+            appVersion = infoDictionary["CFBundleShortVersionString"] as? String ?? "1.0.0"
+            buildVersion = infoDictionary["CFBundleVersion"] as? String ?? "1"
             serverUrl = infoDictionary["RNPushServerURL"] as? String ?? ""
             publicKey = infoDictionary["RNPushPublicKey"] as? String ?? ""
             
-            var clientUniqueID = UserDefaults.standard.string(forKey: RNPushConfigKey.clientUniqueIDConfigKey)
-            if clientUniqueID == nil {
-                clientUniqueID = UIDevice.current.identifierForVendor?.uuidString
-                UserDefaults.standard.setValue(clientUniqueID!, forKey: RNPushConfigKey.clientUniqueIDConfigKey)
+            let userDefaults = UserDefaults(suiteName: "RNPush") ?? UserDefaults.standard
+            if deploymentKey == "" {
+                deploymentKey = userDefaults.string(forKey: RNPushConfigKey.deploymentKeyConfigKey) ?? ""
             }
             
+            if serverUrl == "" {
+                serverUrl = userDefaults.string(forKey: RNPushConfigKey.serverURLConfigKey) ?? ""
+            }
+            
+            var clientUniqueID = userDefaults.string(forKey: RNPushConfigKey.clientUniqueIDConfigKey)
+            if clientUniqueID == nil {
+                clientUniqueID = UIDevice.current.identifierForVendor?.uuidString
+                userDefaults.setValue(clientUniqueID!, forKey: RNPushConfigKey.clientUniqueIDConfigKey)
+            }
             clientUniqueId = clientUniqueID ?? ""
         }
     }
@@ -107,5 +115,11 @@ class RNPushConfig: NSObject {
 }
 
 extension RNPushConfig {
+    
+    static func register(serverUrl: String, deploymentKey: String) {
+        let userDefaults = UserDefaults(suiteName: "RNPush") ?? UserDefaults.standard
+        userDefaults.setValue(serverUrl, forKey: RNPushConfigKey.serverURLConfigKey)
+        userDefaults.setValue(deploymentKey, forKey: RNPushConfigKey.deploymentKeyConfigKey)
+    }
     
 }
