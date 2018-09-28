@@ -33,9 +33,7 @@ class RNPushDownloader: NSObject {
         guard let url = URL(string: urlPath) else { return }
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
-        #if DEBUG
-        NSLog("RNPushDownloader  download from: \(urlPath)")
-        #endif
+        RNPushLog("RNPushDownloader  download from: \(urlPath)")
         task = session.downloadTask(with: url)
         task?.resume()
     }
@@ -52,25 +50,19 @@ class RNPushDownloader: NSObject {
 extension RNPushDownloader: URLSessionDownloadDelegate {
     
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-        #if DEBUG
-        NSLog("RNPushDownloader progress:  \(bytesWritten)  \(totalBytesWritten)  \(totalBytesExpectedToWrite)")
-        #endif
-        
+        RNPushLog("RNPushDownloader progress:  \(bytesWritten)  \(totalBytesWritten)  \(totalBytesExpectedToWrite)")
+
         self.progressHandler?(totalBytesWritten, totalBytesExpectedToWrite)
     }
     
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         do {
-            #if DEBUG
-            NSLog("RNPushDownloader didFinishDownloadingTo location:  \(location.path)   \(location.pathExtension)")
-            #endif
-            
+            RNPushLog("RNPushDownloader didFinishDownloadingTo location:  \(location.path)   \(location.pathExtension)")
+
             let data = NSData(contentsOf: location)
             try data?.write(toFile: filePath, options: .atomicWrite)
 
-            #if DEBUG
-            NSLog("RNPushDownloader  didFinishDownloadingTo save to:  \(filePath)")
-            #endif
+            RNPushLog("RNPushDownloader  didFinishDownloadingTo save to:  \(filePath)")
             self.completionHandler?(filePath, nil)
         } catch let error {
             self.completionHandler?(filePath, error)
@@ -78,10 +70,7 @@ extension RNPushDownloader: URLSessionDownloadDelegate {
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        #if EDBUG
-        NSLog("RNPushDownloader didCompleteWithError: \(String(describing: error))")
-        #endif
-        
+        RNPushLog("RNPushDownloader didCompleteWithError: \(String(describing: error))")
         self.completionHandler?(filePath, error)
     }
 }

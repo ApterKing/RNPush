@@ -29,8 +29,10 @@ class ViewController: UIViewController {
     @objc func gestureAction(_ gesture: UIGestureRecognizer) {
         print("gestureAction")
         RNPushManager.default.ml_downloadIfNeeded("TimeSpace") { (successed) in
-            print("gestureAction -------  \(successed)")
+            print("gestureAction -------  \(successed)      jump:  \(RNPushManager.ml_validate(module: "TimeSpace", route: "TSPublish"))    \(RNPushManager.ml_validate(module: "TimeSpace", route: "TSPublis"))")
         }
+        
+        
     }
 
 }

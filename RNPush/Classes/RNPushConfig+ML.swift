@@ -14,7 +14,7 @@ extension RNPushConfig {
             "deployKey": deploymentKey,
             "appVersion": appVersion,
             "buildVersion": buildVersion,
-            "buildHash": "Kw1ZEDakWJRJywqo5_92eqRysXwWMulwC0fikMmPNaU=", // MLHotUpdateManifestManager.share.buildHashKey(moduleName),
+            "buildHash": RNPushManager.ml_buildHash(for: module),
             "deviceId": clientUniqueId,
             "publicKey": publicKey,
             "module": module
