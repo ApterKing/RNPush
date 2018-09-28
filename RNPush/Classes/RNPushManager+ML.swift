@@ -12,28 +12,12 @@ public extension RNPushManager {
     
     /// MARK: 检查文件是否需要下载，注意每次调用下载某个某个模块之前一定要检查所依赖的模块是否已经被下载，如果未被下载则需要优先下载
     public func ml_downloadIfNeeded(_ module: String, _ completion: @escaping ((_ success: Bool) -> Void)) {
-        ml_check(module) { [weak self] (MLCheckModel, checkError) in    // 检查是否需要更新
-            guard let weakSelf = self else { return }
-            if checkError != nil {
+//        let groupQueue = DispatchGroup
+        ml_check(module) { [weak self] (MLCheckModel, error) in    // 检查是否需要更新
+            if error != nil {
                 completion(false)
             } else {
-                guard let model = MLCheckModel else { return }
-                if model.shouldUpdate {  // 需要下载
-//                    weakSelf.ml_pending(module)
-                    weakSelf.download(urlPath: model.url, save: RNPushManager.zipPath(for: module), progress: nil, completion: { (path, error) in  // 下载更新
-                        if error != nil {
-                            completion(false)
-//                            weakSelf.ml_fail(module)
-                        } else {
-                            weakSelf.unzip(path, RNPushManager.unzipedPath(for: module), nil, completion: { (zipPath, successed, zipError) in   // 解压文件
-                                completion(true)
-//                                weakSelf.ml_success(module)
-                            })
-                        }
-                    })
-                } else {
-                    completion(true)
-                }
+                completion(true)
             }
         }
     }
@@ -45,7 +29,8 @@ extension RNPushManager {
     
     fileprivate func ml_check(_ module: String, completion: @escaping ((_ model: MLCheckModel?, _ error: Error?) -> Void)) {
         let config = RNPushConfig(module)
-        request(config.serverUrl.appending(MLRNPushManagerApi.check), config.ml_params(), "POST") { (data, response, error) in
+        request(config.serverUrl.appending(MLRNPushManagerApi.check), config.ml_params(), "POST") { [weak self] (data, response, error) in
+            guard let weakSelf = self else { return }
             if let err = error {
                 RNPushLog("RNPushManager ml_check error: \(module)  \(String(describing: err))")
                 completion(nil, err)
@@ -60,8 +45,21 @@ extension RNPushManager {
                             let model = MLCheckModel.model(from: jsonData)
                             if !model.shouldUpdate {
                                 RNPushLog("RNPushManager ml_check success: \(module)  已经是最新版本")
+                                //                    weakSelf.ml_pending(module)
+                                weakSelf.download(urlPath: model.url, save: RNPushManager.zipPath(for: module), progress: nil, completion: { (path, error) in  // 下载更新
+                                    if error != nil {
+                                        completion(model, error)
+                                        //                            weakSelf.ml_fail(module)
+                                    } else {
+                                        weakSelf.unzip(path, RNPushManager.unzipedPath(for: module), nil, completion: { (zipPath, successed, zipError) in   // 解压文件
+                                            completion(model, nil)
+                                            //                                weakSelf.ml_success(module)
+                                        })
+                                    }
+                                })
+                            } else {
+                                completion(model, nil)
                             }
-                            completion(model, nil)
                         }
                     }
                 } catch let error {
