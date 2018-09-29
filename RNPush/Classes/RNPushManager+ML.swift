@@ -7,69 +7,99 @@
 
 import Foundation
 
+private var _checkSuccess: [Bool] = []
+private var _shouldReload = false
+
 /// MARK: ML拆包管理（公用方法-可供外部调用）
 public extension RNPushManager {
     
-    /// MARK: 检查文件是否需要下载，注意每次调用下载某个某个模块之前一定要检查所依赖的模块是否已经被下载，如果未被下载则需要优先下载
-    public func ml_downloadIfNeeded(_ module: String, _ completion: @escaping ((_ success: Bool) -> Void)) {
-//        let groupQueue = DispatchGroup
-        ml_check(module) { [weak self] (MLCheckModel, error) in    // 检查是否需要更新
-            if error != nil {
-                completion(false)
-            } else {
-                completion(true)
+    /// MARK: 检查文件是否需要下载，注意每次调用下载某个某个模块之前一定要检查所依赖的模块是否已经被下载，如果未被下载则需下载
+    public func ml_updateIfNeeded(_ module: String, _ completion: @escaping ((_ shouldReload: Bool) -> Void)) {
+        
+        // 这里的module 应当包含依赖的相关模块
+        var modules = [module]
+        modules.append(contentsOf: MLManifestModel.model(for: module)?.dependency ?? [])
+        
+        _checkSuccess = []
+        _shouldReload = false
+        for tmpModule in modules {
+            ml_check(tmpModule) { [weak self] (success, reload) in
+                self?.ml_updateIfNeededSync(success, reload, modules.count, completion)
             }
         }
     }
     
+    // 当前模块及其所依赖的模块成功加载完成，通知当前页面是否需要重新加载
+    fileprivate func ml_updateIfNeededSync(_ success: Bool, _ reload: Bool, _ moduleCount: Int, _ completion: @escaping ((_ shouldReload: Bool) -> Void)) {
+        objc_sync_enter(_checkSuccess)
+        var tmpCheckSuccess = _checkSuccess
+        tmpCheckSuccess.append(success)
+        _checkSuccess = tmpCheckSuccess
+        if reload == true {
+            _shouldReload = reload
+        }
+        
+        if _checkSuccess.count == moduleCount {
+            completion(_checkSuccess.filter({ $0 }).count == moduleCount && _shouldReload)
+            RNPushLog("==========     \(_checkSuccess.filter({ $0 }).count == moduleCount && _shouldReload)")
+        }
+        objc_sync_exit(_checkSuccess)
+    }
 }
 
 /// MARK: 网络相关处理
 extension RNPushManager {
     
-    fileprivate func ml_check(_ module: String, completion: @escaping ((_ model: MLCheckModel?, _ error: Error?) -> Void)) {
+    // 检测是否需要重新reload，checkSuccess 标识检测成功，shouldReload标识是否需要重新加载（检测成功不一定代表需要重新加载，只有模块所依赖的所有checkSuccess才能够去判定是否需要reload）
+    fileprivate func ml_check(_ module: String, completion: @escaping ((_ checkSuccess: Bool, _ shouldReload: Bool) -> Void)) {
         let config = RNPushConfig(module)
         request(config.serverUrl.appending(MLRNPushManagerApi.check), config.ml_params(), "POST") { [weak self] (data, response, error) in
             guard let weakSelf = self else { return }
             if let err = error {
                 RNPushLog("RNPushManager ml_check error: \(module)  \(String(describing: err))")
-                completion(nil, err)
+                completion(false, false)
             } else {
                 do {
                     if let json = (try JSONSerialization.jsonObject(with: data ?? Data(), options: .allowFragments)) as? [String: Any] {
                         let jsonCode = json["code"] as? Int64 ?? 0
                         let jsonData = json["data"] as? [String: Any] ?? [:]
                         if jsonCode != 0 {
-                            completion(nil, nil)
+                            completion(true, false)
                         } else {
                             let model = MLCheckModel.model(from: jsonData)
-                            if !model.shouldUpdate {
-                                RNPushLog("RNPushManager ml_check success: \(module)  已经是最新版本")
-                                //                    weakSelf.ml_pending(module)
-                                weakSelf.download(urlPath: model.url, save: RNPushManager.zipPath(for: module), progress: nil, completion: { (path, error) in  // 下载更新
-                                    if error != nil {
-                                        completion(model, error)
-                                        //                            weakSelf.ml_fail(module)
+                            if model.shouldUpdate {
+                                weakSelf.ml_pending(module)
+                                weakSelf.download(urlPath: model.url, save: RNPushManager.zipPath(for: module), progress: nil, completion: { (path, downloadError) in  // 下载更新
+                                    if downloadError != nil {
+                                        completion(false, false)
+                                        weakSelf.ml_fail(module)
                                     } else {
                                         weakSelf.unzip(path, RNPushManager.unzipedPath(for: module), nil, completion: { (zipPath, successed, zipError) in   // 解压文件
-                                            completion(model, nil)
-                                            //                                weakSelf.ml_success(module)
+                                            if zipError == nil {    // 仅当能够解压成功，才标识整个模块更新完成
+                                                completion(true, true)
+                                                weakSelf.ml_success(module)
+                                            } else {
+                                                completion(false, false)
+                                                weakSelf.ml_fail(module)
+                                            }
                                         })
                                     }
                                 })
                             } else {
-                                completion(model, nil)
+                                RNPushLog("RNPushManager ml_check success: \(module)  已经是最新版本")
+                                completion(true, false)
                             }
                         }
                     }
                 } catch let error {
                     RNPushLog("RNPushManager ml_check error catch: \(module)  \(String(describing: error))")
-                    completion(nil, error)
+                    completion(false, false)
                 }
             }
         }
     }
     
+    // 请求所有模块，暂时未使用到
     fileprivate func ml_all() {
         let config = RNPushConfig("")
         request(config.serverUrl.appending(MLRNPushManagerApi.all), config.ml_params(), "POST") { (data, response, error) in
@@ -105,7 +135,7 @@ extension RNPushManager {
     }
     
     fileprivate class MLCheckModel: NSObject {
-        var updated: Bool = false   // 是否为最新版本
+        var updated: Bool = true    // 是否为最新版本
         var force: Bool = false     // 是否需要强制更新
         var full: Bool = false      // 是否全量更新
         var url: String = ""        // 文件url

@@ -63,8 +63,8 @@ extension RNPushDownloader: URLSessionDownloadDelegate {
             try data?.write(toFile: filePath, options: .atomicWrite)
 
             RNPushLog("RNPushDownloader  didFinishDownloadingTo save to:  \(filePath)")
-            self.completionHandler?(filePath, nil)
         } catch let error {
+            RNPushLog("RNPushDownloader  didFinishDownloadingTo fail")
             self.completionHandler?(filePath, error)
         }
     }
