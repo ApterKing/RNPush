@@ -41,7 +41,7 @@ public extension RNPushManager {
         
         if _checkSuccess.count == moduleCount {
             completion(_checkSuccess.filter({ $0 }).count == moduleCount && _shouldReload)
-            RNPushLog("==========     \(_checkSuccess.filter({ $0 }).count == moduleCount && _shouldReload)")
+            RNPushLog("RNPushManager  ml_updateIfNeeded  shouldReload: \(_checkSuccess.filter({ $0 }).count == moduleCount && _shouldReload)")
         }
         objc_sync_exit(_checkSuccess)
     }
