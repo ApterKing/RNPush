@@ -20,16 +20,6 @@ public class RNPushManager: NSObject {
     static fileprivate let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
     static fileprivate let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     
-    static fileprivate let kUpdateInfoKey = "com.RNPush.kUpdateInfoKey"
-    static fileprivate let kUpdateInfoPackageVersionKey = "com.RNPush.kUpdateInfoPackageVersionKey"
-    static fileprivate let kUpdateInfoCurrentVersionKey = "com.RNPush.kUpdateInfoCurrentVersionKey"
-    static fileprivate let kUpdateInfoLatestVersionKey = "com.RNPush.kUpdateInfoLatestVersionKey"
-    static fileprivate let kUpdateInfoIsFirstLoadOkKey = "com.RNPush.kUpdateInfoIsFirstLoadOkKey"
-    static fileprivate let kUpdateInfoIsFirstTimeKey = "com.RNPush.kUpdateInfoIsFirstTimeKey"
-    static fileprivate let kPackageUpdatedMarked = "com.RNPush.kPackageUpdatedMarked"
-    static fileprivate let kRolledBackMarked = "com.RNPush.kRolledBackMarked"
-    static fileprivate let kFirstLoadMarked = "com.RNPush.kFirstLoadMarked"
-
     fileprivate let asyncQueue = DispatchQueue(label: "com.RNPush")
 }
 
@@ -46,61 +36,15 @@ public extension RNPushManager {
     class public func bundleURL(for module: String = "") -> URL? {
         let userDefaults = UserDefaults(suiteName: "RNPush") ?? UserDefaults.standard
 
-        // 检测相关更新文件
-        if let updateInfo = userDefaults.dictionary(forKey: kUpdateInfoKey) {
-            let curPackageVersion = RNPushManager.appVersion
-            let updPackageVersion = updateInfo[kUpdateInfoPackageVersionKey] as? String ?? ""
-            let shouldClearUpdateInfo = curPackageVersion != updPackageVersion
-            
-            if shouldClearUpdateInfo {   // 是否需要更新存储的信息
-                userDefaults.setValue(nil, forKey: kUpdateInfoKey)
-                userDefaults.set(true, forKey: kPackageUpdatedMarked)
-                userDefaults.synchronize()
-            } else {
-                let curVersion = updateInfo[kUpdateInfoCurrentVersionKey] as? String ?? ""
-                let latestVersion = updateInfo[kUpdateInfoLatestVersionKey] as? String ?? ""
-                
-                let isFirstTime = updateInfo[kUpdateInfoIsFirstTimeKey] as? Bool ?? true
-                let isFirstLoadOk = updateInfo[kUpdateInfoIsFirstTimeKey] as? Bool ?? false
-                
-                var loadVersion = curVersion
-                let shouldRollback = (isFirstTime == false && isFirstLoadOk == false) || loadVersion.count <= 0
-                if shouldRollback {   // 需要回滚
-                    loadVersion = latestVersion
-                    if loadVersion.count != 0 {
-                        userDefaults.set([
-                            kUpdateInfoPackageVersionKey: curPackageVersion,
-                            kUpdateInfoCurrentVersionKey: latestVersion,
-                            kUpdateInfoIsFirstTimeKey: false,
-                            kUpdateInfoIsFirstLoadOkKey: true
-                            ], forKey: kUpdateInfoKey)
-                    } else {
-                        userDefaults.set(nil, forKey: kUpdateInfoKey)
-                    }
-                    userDefaults.set(true, forKey: kRolledBackMarked)
-                    userDefaults.synchronize()
-                } else if isFirstTime {
-                    var newUpdateInfo = updateInfo
-                    newUpdateInfo[kUpdateInfoIsFirstTimeKey] = false
-                    userDefaults.set(newUpdateInfo, forKey: kUpdateInfoKey)
-                    userDefaults.set(true, forKey: kFirstLoadMarked)
-                    userDefaults.synchronize()
-                }
-                
-                if loadVersion.count != 0 {
-                    let bundlePath = RNPushManager.unzipedPath(for: module)
-                    if FileManager.default.fileExists(atPath: bundlePath) {
-                        return URL(fileURLWithPath: bundlePath)
-                    }
-                }
-            }
+        // 检测相关模块是否需要回滚
+
+        // 从sanbox中获取bundleURL
+        let bundlePath = RNPushManager.unzipedPath(for: module)
+        if FileManager.default.fileExists(atPath: bundlePath) {
+            return URL(fileURLWithPath: bundlePath)
         }
         
-//        let bundlePath = RNPushManager.unzipedPath(for: module)
-//        if FileManager.default.fileExists(atPath: bundlePath) {
-//            return URL(fileURLWithPath: bundlePath)
-//        }
-        
+        // 从应用包中获取bundleURL
         let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main.jsbundle"
         let bundleURL = Bundle.main.url(forResource: bundleResource, withExtension: nil)
         return module == "" ? bundleURL : bundleURL?.appendingPathComponent(module)
@@ -147,6 +91,7 @@ extension RNPushManager {
         }
         RNPushDownloader.download(urlPath: urlPath, save: savePath!, progress: progress, completion: completion)
     }
+    
 }
 
 /// MARK: 本地文件处理

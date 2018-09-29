@@ -14,10 +14,19 @@ extension RNPushConfig {
             "deployKey": deploymentKey,
             "appVersion": appVersion,
             "buildVersion": buildVersion,
-            "buildHash": RNPushManager.ml_buildHash(for: module),
+            "buildHash": ml_encode(string: RNPushManager.ml_buildHash(for: module)) ?? "",
             "deviceId": clientUniqueId,
             "publicKey": publicKey,
             "module": module
         ]
+    }
+    
+    fileprivate func ml_encode(string: String) -> String? {
+        let generalDelimitersToEncode = ":#[]@"
+        let subDelimitersToEncode = "!$&'()*+,;="
+        
+        var allowedCharacterSet = CharacterSet.urlHostAllowed
+        allowedCharacterSet.remove(charactersIn: "\(generalDelimitersToEncode)\(subDelimitersToEncode)")
+        return string.addingPercentEncoding(withAllowedCharacters: allowedCharacterSet)
     }
 }

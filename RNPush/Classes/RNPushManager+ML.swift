@@ -29,7 +29,7 @@ public extension RNPushManager {
         }
     }
     
-    // 当前模块及其所依赖的模块成功加载完成，通知当前页面是否需要重新加载
+    // 当前模块及其所依赖的模块成功加载完成，通知当前页面是否需要reload
     fileprivate func ml_updateIfNeededSync(_ success: Bool, _ reload: Bool, _ moduleCount: Int, _ completion: @escaping ((_ shouldReload: Bool) -> Void)) {
         objc_sync_enter(_checkSuccess)
         var tmpCheckSuccess = _checkSuccess
@@ -69,12 +69,12 @@ extension RNPushManager {
                             let model = MLCheckModel.model(from: jsonData)
                             if model.shouldUpdate {
                                 weakSelf.ml_pending(module)
-                                weakSelf.download(urlPath: model.url, save: RNPushManager.zipPath(for: module), progress: nil, completion: { (path, downloadError) in  // 下载更新
+                                weakSelf.download(urlPath: model.url, save: RNPushManager.zipPath(for: module), progress: nil, completion: { (path, downloadError) in
                                     if downloadError != nil {
                                         completion(false, false)
                                         weakSelf.ml_fail(module)
                                     } else {
-                                        weakSelf.unzip(path, RNPushManager.unzipedPath(for: module), nil, completion: { (zipPath, successed, zipError) in   // 解压文件
+                                        weakSelf.unzip(path, RNPushManager.unzipedPath(for: module), nil, completion: { (zipPath, successed, zipError) in
                                             if zipError == nil {    // 仅当能够解压成功，才标识整个模块更新完成
                                                 completion(true, true)
                                                 weakSelf.ml_success(module)
