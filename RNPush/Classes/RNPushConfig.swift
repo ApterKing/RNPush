@@ -117,7 +117,7 @@ class RNPushConfig: NSObject {
 extension RNPushConfig {
     
     static func register(serverUrl: String, deploymentKey: String) {
-        let userDefaults = UserDefaults(suiteName: "RNPush") ?? UserDefaults.standard
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         userDefaults.setValue(serverUrl, forKey: RNPushConfigKey.serverURLConfigKey)
         userDefaults.setValue(deploymentKey, forKey: RNPushConfigKey.deploymentKeyConfigKey)
     }
