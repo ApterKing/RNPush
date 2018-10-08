@@ -20,11 +20,12 @@ func RNPushLog(_ format: String, _ args: CVarArg...) {
 
 public class RNPushManager: NSObject {
     
-    static fileprivate let kBundleResourceKey = "com.RNPush.kBundleResourceKey"
-    static fileprivate let kRollbackKey = "com.RNPush.kRollbackKey"
-    static fileprivate let kRollBackSuffixKey = ".rollback"
-    static fileprivate let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
-    static fileprivate let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+    static let kBundleResourceKey = "com.RNPush.kBundleResourceKey"
+    static let kRollbackKey = "com.RNPush.kRollbackKey"
+    static let kPatchSuffixKey = ".zip"
+    static let kRollBackSuffixKey = "_rollback"
+    static let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+    static let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     
 }
 
@@ -41,26 +42,29 @@ public extension RNPushManager {
 
     /// 模块所在的位置
     class public func bundleURL(for module: String = "") -> URL? {
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-
         // 从sanbox中获取bundleURL
-        let bundlePath = RNPushManager.unzipedPath(for: module)
+        let bundlePath = RNPushManager.unpatchedPath(for: module)
         if FileManager.default.fileExists(atPath: bundlePath) {
             return URL(fileURLWithPath: bundlePath)
         }
         
         // 从应用包中获取bundleURL
+        return RNPushManager.binaryBundleURL(for: module)
+    }
+    
+    class public func binaryBundleURL(for module: String = "") -> URL? {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main.jsbundle"
         let bundleURL = Bundle.main.url(forResource: bundleResource, withExtension: nil)
         return module == "" ? bundleURL : bundleURL?.appendingPathComponent(module)
     }
     
-    class public func binaryBundleURL(for module: String = "") -> URL? {
+    class public func bridgeBundleURL(for module: String = "") -> URL? {
         return RNPushManager.bundleURL(for: module)?.appendingPathComponent(module == "" ? "main.js" : "index.js")
     }
     
     /// 回滚更新出错的模块
-    class private func rollbackIfNeeded(_ completion: ((_ error: Error?) -> Void)? = nil) {
+    class func rollbackIfNeeded(_ completion: ((_ error: Error?) -> Void)? = nil) {
         
         DispatchQueue(label: "com.RNPush.rollback").async {
             do {
@@ -68,28 +72,28 @@ public extension RNPushManager {
                 let rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
                 
                 for module in rollbackModules {
-                    // 删除更新后的unzip文件
-                    let unzipPath = RNPushManager.unzipedPath(for: module)
-                    if FileManager.default.fileExists(atPath: unzipPath) {
-                        try FileManager.default.removeItem(atPath: unzipPath)
+                    // 删除更新后的unpatched文件
+                    let unpatchedPath = RNPushManager.unpatchedPath(for: module)
+                    if FileManager.default.fileExists(atPath: unpatchedPath) {
+                        try FileManager.default.removeItem(atPath: unpatchedPath)
                     }
                     
-                    if FileManager.default.fileExists(atPath: unzipPath) {
-                        try FileManager.default.removeItem(atPath: unzipPath)
+                    if FileManager.default.fileExists(atPath: unpatchedPath) {
+                        try FileManager.default.removeItem(atPath: unpatchedPath)
                     }
                     
-                    // 删除更新后的zip文件
-                    let zipPath = RNPushManager.zipPath(for: module)
-                    if FileManager.default.fileExists(atPath: zipPath) {
-                        try FileManager.default.removeItem(atPath: zipPath)
+                    // 删除更新后的patch文件
+                    let patchPath = RNPushManager.patchPath(for: module)
+                    if FileManager.default.fileExists(atPath: patchPath) {
+                        try FileManager.default.removeItem(atPath: patchPath)
                     }
                     
                     // 检测是否存在rollback备份文件, 存在则重新解压
                     let rollbackPath = RNPushManager.rollbackPath(for: module)
                     if FileManager.default.fileExists(atPath: rollbackPath) {
-                        try FileManager.default.moveItem(atPath: rollbackPath, toPath: zipPath)
+                        try FileManager.default.moveItem(atPath: rollbackPath, toPath: patchPath)
                         try FileManager.default.removeItem(atPath: rollbackPath)
-                        RNPushManager.unzip(RNPushManager.zipPath(for: module), RNPushManager.unzipedPath(for: module), nil, completion: nil)
+                        RNPushManager.unzip(RNPushManager.patchPath(for: module), RNPushManager.unpatchedPath(for: module), nil, completion: nil)
                     }
                     
                     // 每完成一个回滚，则重设kRollbackKey
@@ -155,8 +159,9 @@ extension RNPushManager {
     class public func download(urlPath: String, save filePath: String?, progress: ((_ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?, completion: ((_ path: String, _ error: Error?) -> Void)?) {
         var savePath = filePath
         if savePath == nil {
-            savePath = RNPushManager.zipPath()
+            savePath = RNPushManager.patchPath()
         }
+        
         RNPushDownloader.download(urlPath: urlPath, save: savePath!, progress: progress, completion: completion)
     }
     
@@ -165,8 +170,8 @@ extension RNPushManager {
 /// MARK: 本地文件处理
 extension RNPushManager {
     
-    // 下载文件的存储地址
-    class fileprivate func sanboxPath(_ pathComponent: String = "", isDirectory: Bool = true) -> String {
+    // 热更文件存储所在的文件夹
+    class func sanboxPath(_ pathComponent: String = "", isDirectory: Bool = true) -> String {
         let supportPath = NSSearchPathForDirectoriesInDomains(.applicationSupportDirectory, .userDomainMask, true).first ?? ""
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         var sanboxPath = "\(supportPath)/\(userDefaults.string(forKey: RNPushManager.kBundleResourceKey) ?? "RNPush")_\(RNPushManager.appVersion)_\(RNPushManager.buildVersion)"
@@ -183,29 +188,33 @@ extension RNPushManager {
         return sanboxPath
     }
     
-    // 压缩文件地址
-    class func zipPath(for module: String = "") -> String {
+    // 更新文件地址
+    class func patchPath(for module: String = "") -> String {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main.jsbundle"
-        return sanboxPath("zip", isDirectory: true) + "/" + (module == "" ? bundleResource : module) + ".zip"
+        return sanboxPath() + "/" + (module == "" ? bundleResource : module) + (bundleResource.hasSuffix(".jsbundle") ? "" : kPatchSuffixKey)
     }
     
-    // 解压文件地址
-    class func unzipedPath(for module: String = "") -> String {
+    // 更新文件解压地址
+    class func unpatchedPath(for module: String = "") -> String {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main.jsbundle"
-        return sanboxPath("unzip", isDirectory: true) + "/" + (module == "" ? bundleResource : module)
+        let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main"
+        return sanboxPath() + "/" + (module == "" ? bundleResource : module)
+    }
+    
+    // 更新文件解压地址临时存储地址
+    class func unpatchedTmpPath(for module: String = "") -> String {
+        return unpatchedPath(for: module) + "_tmp"
     }
     
     // 回滚文件地址
     class func rollbackPath(for module: String = "") -> String {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main.jsbundle"
-        return sanboxPath("rollback", isDirectory: true) + "/" + (module == "" ? bundleResource : module) + kRollBackSuffixKey
+        let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main"
+        return sanboxPath() + "/" + (module == "" ? bundleResource : module) + kRollBackSuffixKey
     }
     
-    /// 解压文件
-    class public func unzip(_ sourcePath: String, _ destinationPath: String, _ progress: ((_ entry: String, _ entryNumber: Int, _ total: Int) -> Void)?, completion: ((_ path: String, _ successed: Bool, _ error: Error?) -> Void)?) {
+    class public func unzip(_ sourcePath: String, _ destinationPath: String, _ progress: ((_ entry: String, _ entryNumber: Int, _ total: Int) -> Void)?, completion: ((_ path: String, _ success: Bool, _ error: Error?) -> Void)?) {
         guard destinationPath != "" else { return }
         DispatchQueue(label: "com.RNPush.unzip").async {
             if FileManager.default.fileExists(atPath: destinationPath) {
@@ -227,11 +236,40 @@ extension RNPushManager {
         }
     }
     
-    class public func merge(_ module: String = "", _ completion: ((_ error: Error?) -> Void)?) {
+    class public func copy(_ sourcePath: String, _ destPath: String, _ shouldDeleteDest: Bool = false, _ complection: ((_ error: Error?) -> Void)? = nil) {
+        DispatchQueue(label: "com.RNPush.copy").async {
+            do {
+                if shouldDeleteDest && FileManager.default.fileExists(atPath: destPath) {
+                    try FileManager.default.removeItem(atPath: destPath)
+                }
+                try FileManager.default.copyItem(atPath: sourcePath, toPath: destPath)
+                DispatchQueue.main.async {
+                    complection?(nil)
+                }
+            } catch let error {
+                DispatchQueue.main.async {
+                    complection?(error)
+                }
+            }
+        }
+    }
+    
+    class public func merge(_ sourcePath: String, _ destPath: String, _ deletes: [String] = [], _ completion: ((_ error: Error?) -> Void)? = nil) {
         DispatchQueue(label: "com.RNPush.merge").async {
             
-            DispatchQueue.main.async {
-                completion?(nil)
+            do {
+                for deleltePath in deletes {
+                    try FileManager.default.removeItem(atPath: deleltePath)
+                }
+
+                
+                DispatchQueue.main.async {
+                    completion?(nil)
+                }
+            } catch let error {
+                DispatchQueue.main.async {
+                    completion?(error)
+                }
             }
         }
     }
