@@ -7,88 +7,102 @@
 
 import Foundation
 
+let check_lock = "check_lock"
+
 /// MARK: ML拆包管理（公用方法-可供外部调用）
 public extension RNPushManager {
     
     /// MARK: 检查文件是否需要下载，注意每次调用下载某个某个模块之前一定要检查所依赖的模块是否已经被下载，如果未被下载则需下载
-    class public func ml_updateIfNeeded(_ module: String, _ completion: @escaping ((_ shouldReload: Bool) -> Void)) {
+    class public func ml_updateIfNeeded(_ module: String, _ completion: ((_ shouldReload: Bool) -> Void)? = nil) {
         
         // 这里的modules 应当包含依赖的相关模块
         var modules = [module]
         modules.append(contentsOf: MLManifestModel.model(for: module)?.dependency ?? [])
         RNPushManager.ml_checks(modules) { (checkSuccess, needReload) in
             if checkSuccess {
-                guard needReload == true else {
-                    completion(false)
-                    return
+                if needReload {
+                    RNPushManager.addRollbackIfNeeded(for: module)
                 }
-                // 合并
-                RNPushManager.ml_merges(modules, { (mergeSuccess) in
-                    completion(mergeSuccess)
-                })
+                completion?(needReload)
+                RNPushManager.removeRollbackIfNeeded(for: module)
             } else {
-                completion(false)
+                completion?(false)
             }
         }
     }
     
-    // 保证同时检测并且下载、解压成功
+    // 此方法需要在用户登录状态为成功时调用一次，上传数据如下
+    /*
+     "name": MLLoginUser.shared.user?.name ?? "" ,
+     "sectionName": MLLoginUser.shared.user?.sectionName ?? "",
+     "titleName": MLLoginUser.shared.user?.titleName ?? "",
+     "hospital": MLLoginUser.shared.user?.hospital ?? "",
+     "sex": MLLoginUser.shared.user?.sex.rawValue ?? 0,
+     "type": MLLoginUser.shared.user?.type?.rawValue ?? 0,
+     "avatar": MLLoginUser.shared.user?.avatar ?? "",
+     "id": MLLoginUser.shared.user?.userId ?? 0,
+     "phoneNum": MLLoginUser.shared.user?.cellphone ?? ""
+     */
+    class public func ml_bind(userInfo: [String: Any]) {
+        let config = RNPushConfig()
+        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.bind), userInfo, "POST", nil)
+    }
+}
+
+extension RNPushManager {
+    
+    // 保证同时检测、下载、解压、合并成功
     class fileprivate func ml_checks(_ modules: [String], _ completion: @escaping ((_ checkSuccess: Bool, _ needReload: Bool) -> Void)) {
         var _successes: [Bool] = []
         var _needReload = false
         for module in modules {
-            RNPushManager.ml_check(module) { (success, reload) in
-                objc_sync_enter(_successes)
+            RNPushManager.ml_check_pre(module) { (success, reload) in
+                objc_sync_enter(check_lock)
                 _successes.append(success)
+                
                 if reload == true {
-                    _needReload = reload
+                    _needReload = true
                 }
                 
                 if _successes.count == modules.count {
                     let _checkSuccess = _successes.filter({ $0 }).count == modules.count
                     completion(_checkSuccess, _needReload)
                 }
-                objc_sync_exit(_successes)
+                objc_sync_exit(check_lock)
             }
         }
     }
     
-    // 保证同时合并成功，否则需要回滚业务模块
-    class fileprivate func ml_merges(_ modules: [String], _ completion: @escaping ((_ mergeSuccess: Bool) -> Void)) {
-        var _successes: [Bool] = []
-        for module in modules {
-            let unpatchedTmpPath = RNPushManager.unpatchedTmpPath(for: module)
-            let unpatchedPath = RNPushManager.unpatchedPath(for: module)
-            let rollbackPath = RNPushManager.rollbackPath(for: module)
-            
-            // 优先备份之前正常的module，用于后续merge或者热更出现错误回滚
-            RNPushManager.copy(unpatchedPath, rollbackPath, true) { (_) in
-                
-                RNPushManager.merge(unpatchedTmpPath, unpatchedPath, [], { (error) in
-                    objc_sync_enter(_successes)
-                    _successes.append(error != nil ? false : true)
-                    
-                    if _successes.count == modules.count {
-                        let _mergeSuccess = _successes.filter({ $0 }).count == modules.count
-                        completion(_mergeSuccess)
-                        
-                        RNPushManager.rollbackIfNeeded()
-                    }
-                    
-                    objc_sync_exit(_successes)
-                })
-            }
+    class fileprivate func ml_merge(_ module: String, _ completion: ((_ mergeSuccess: Bool) -> Void)? = nil) {
+        let unpatchedTmpPath = RNPushManager.unpatchedTmpPath(for: module)
+        let unpatchedPath = RNPushManager.unpatchedPath(for: module)
+        let rollbackPath = RNPushManager.rollbackPath(for: module)
+        
+        // 在merge之前备份正常使用的module，用于后续merge或者热更出现错误回滚
+        RNPushManager.copy(unpatchedPath, rollbackPath, true) { (_) in
+            RNPushManager.merge(unpatchedTmpPath, unpatchedPath, [], { (error) in
+                let _mergeSuccess = error == nil
+                if _mergeSuccess { // 合并成功清除不必要的文件
+                    RNPushManager.ml_clearInvalidate(module)
+                } else { // 否则则需要回滚该模块
+                    try? RNPushManager.rollback(for: module)
+                }
+                completion?(_mergeSuccess)
+            })
         }
     }
     
     // 清除无用文件
-    class fileprivate func ml_clearInvalidate(_ modules: [String]) {
+    class fileprivate func ml_clearInvalidate(_ module: String) {
         DispatchQueue(label: "com.RNPush.ml_clearInvalidate").async {
-            for module in modules {
-                let unpatchedTmpPath = RNPushManager.unpatchedTmpPath(for: module)
-                if FileManager.default.fileExists(atPath: unpatchedTmpPath) {
-                    try? FileManager.default.removeItem(atPath: unpatchedTmpPath)
-                }
+            let unpatchedTmpPath = RNPushManager.unpatchedTmpPath(for: module)
+            if FileManager.default.fileExists(atPath: unpatchedTmpPath) {
+                try? FileManager.default.removeItem(atPath: unpatchedTmpPath)
+            }
+            
+            let patchPath = RNPushManager.patchPath(for: module)
+            if FileManager.default.fileExists(atPath: patchPath) {
+                try? FileManager.default.removeItem(atPath: patchPath)
             }
         }
     }
@@ -100,15 +114,20 @@ extension RNPushManager {
     // 检测单个module是否需要重新reload;
     // parameter: checkSuccess 标识检测成功
     // parameter: shouldReload 标识是否需要重新加载
-    class fileprivate func ml_check(_ module: String, completion: @escaping ((_ checkSuccess: Bool, _ shouldReload: Bool) -> Void)) {
+    class fileprivate func ml_check_pre(_ module: String, _ completion: @escaping ((_ checkSuccess: Bool, _ shouldReload: Bool) -> Void)) {
         // 如果当前的模块是最新版本，并且在sanbox中没有包含模块，那么将打包中的文件拷贝至外部（用于merge）
         let destDir = RNPushManager.unpatchedPath(for: module)
         if !FileManager.default.fileExists(atPath: destDir) {
             let sourceDir = RNPushManager.binaryBundleURL(for: module)?.path ?? ""
             RNPushManager.copy(sourceDir, destDir, true, { (_) in
+                ml_check(module, completion)
             })
+        } else {
+            ml_check(module, completion)
         }
-        
+    }
+    
+    class fileprivate func ml_check(_ module: String, _ completion: @escaping ((_ checkSuccess: Bool, _ shouldReload: Bool) -> Void)) {
         let config = RNPushConfig(module)
         RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.check), config.ml_params(), "POST") { (data, response, error) in
             if let err = error {
@@ -125,13 +144,18 @@ extension RNPushManager {
                             let model = MLCheckModel.model(from: jsonData)
                             if model.shouldUpdate {
                                 RNPushManager.ml_pending(module)
+                                // 下载
                                 RNPushManager.download(urlPath: model.url, save: RNPushManager.patchPath(for: module), progress: nil, completion: { (path, downloadError) in
                                     if downloadError != nil {
                                         completion(false, false)
                                     } else {
+                                        // 解压
                                         RNPushManager.unzip(RNPushManager.patchPath(for: module), RNPushManager.unpatchedTmpPath(for: module), nil, completion: { (zipPath, success, zipError) in
                                             if success {
-                                                completion(true, true)
+                                                // 合并
+                                                RNPushManager.ml_merge(module, { (mergeSuccess) in
+                                                    completion(mergeSuccess, mergeSuccess)
+                                                })
                                             } else {
                                                 completion(false, false)
                                             }
@@ -162,21 +186,21 @@ extension RNPushManager {
     
     class fileprivate func ml_success(_ module: String) {
         RNPushLog("RNPushManager ml_success : \(module)")
-        guard module != "Base" else { return }
+        RNPushManager.success(for: module)
         let config = RNPushConfig(module)
         RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.success), config.ml_params(), "POST", nil)
     }
     
     class fileprivate func ml_pending(_ module: String) {
-        guard module != "Base" else { return }
         RNPushLog("RNPushManager ml_pending : \(module)")
+        RNPushManager.pending(for: module)
         let config = RNPushConfig(module)
         RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.pending), config.ml_params(), "POST", nil)
     }
     
     class fileprivate func ml_fail(_ module: String) {
         RNPushLog("RNPushManager ml_fail : \(module)")
-        guard module != "Base" else { return }
+        RNPushManager.fail(for: module)
         let config = RNPushConfig(module)
         RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.fail), config.ml_params(), "POST", nil)
     }

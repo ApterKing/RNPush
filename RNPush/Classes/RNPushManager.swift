@@ -32,7 +32,7 @@ public class RNPushManager: NSObject {
 public extension RNPushManager {
     
     /// 注册相关配置，此方法在willFinishLaunchingWithOptions/didFinishLaunchingWithOptions中需要调用
-    class public func register(serverUrl: String, deploymentKey: String, bundleResource: String = "RNPush") {
+    class public func register(serverUrl: String, deploymentKey: String, bundleResource: String? = nil) {
         RNPushConfig.register(serverUrl: serverUrl, deploymentKey: deploymentKey)
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         userDefaults.set(bundleResource, forKey: kBundleResourceKey)
@@ -49,7 +49,7 @@ public extension RNPushManager {
         }
         
         // 从应用包中获取bundleURL
-        return RNPushManager.binaryBundleURL(for: module)
+        return binaryBundleURL(for: module)
     }
     
     class public func binaryBundleURL(for module: String = "") -> URL? {
@@ -60,7 +60,28 @@ public extension RNPushManager {
     }
     
     class public func bridgeBundleURL(for module: String = "") -> URL? {
-        return RNPushManager.bundleURL(for: module)?.appendingPathComponent(module == "" ? "main.js" : "index.js")
+        return bundleURL(for: module)?.appendingPathComponent(module == "" ? "main.js" : "index.js")
+    }
+    
+    class public func addRollbackIfNeeded(for module: String) {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        var rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
+        if let index = rollbackModules.index(of: module) {
+            rollbackModules.remove(at: index)
+        }
+        rollbackModules.append(module)
+        userDefaults.set(rollbackModules, forKey: kRollbackKey)
+    }
+    
+    class public func removeRollbackIfNeeded(for module: String) {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        var rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
+        if let index = rollbackModules.index(of: module) {
+            rollbackModules.remove(at: index)
+            userDefaults.set(rollbackModules, forKey: kRollbackKey)
+            
+            rollbackIfNeeded()
+        }
     }
     
     /// 回滚更新出错的模块
@@ -72,36 +93,10 @@ public extension RNPushManager {
                 let rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
                 
                 for module in rollbackModules {
-                    // 删除更新后的unpatched文件
-                    let unpatchedPath = RNPushManager.unpatchedPath(for: module)
-                    if FileManager.default.fileExists(atPath: unpatchedPath) {
-                        try FileManager.default.removeItem(atPath: unpatchedPath)
-                    }
-                    
-                    if FileManager.default.fileExists(atPath: unpatchedPath) {
-                        try FileManager.default.removeItem(atPath: unpatchedPath)
-                    }
-                    
-                    // 删除更新后的patch文件
-                    let patchPath = RNPushManager.patchPath(for: module)
-                    if FileManager.default.fileExists(atPath: patchPath) {
-                        try FileManager.default.removeItem(atPath: patchPath)
-                    }
-                    
-                    // 检测是否存在rollback备份文件, 存在则重新解压
-                    let rollbackPath = RNPushManager.rollbackPath(for: module)
-                    if FileManager.default.fileExists(atPath: rollbackPath) {
-                        try FileManager.default.moveItem(atPath: rollbackPath, toPath: patchPath)
-                        try FileManager.default.removeItem(atPath: rollbackPath)
-                        RNPushManager.unzip(RNPushManager.patchPath(for: module), RNPushManager.unpatchedPath(for: module), nil, completion: nil)
-                    }
+                    try rollback(for: module)
                     
                     // 每完成一个回滚，则重设kRollbackKey
-                    var tmpRollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
-                    if let index = tmpRollbackModules.index(of: module) {
-                        tmpRollbackModules.remove(at: index)
-                        userDefaults.set(tmpRollbackModules, forKey: kRollbackKey)
-                    }
+                    removeRollbackIfNeeded(for: module)
                 }
                 DispatchQueue.main.async {
                     completion?(nil)
@@ -114,15 +109,35 @@ public extension RNPushManager {
         }
     }
     
-    public func success(for module: String = "") {
+    class func rollback(for module: String) throws {
+        // 删除更新后的patch文件
+        let patchPath = RNPushManager.patchPath(for: module)
+        if FileManager.default.fileExists(atPath: patchPath) {
+            try FileManager.default.removeItem(atPath: patchPath)
+        }
+        
+        // 删除更新后的unpatched文件
+        let unpatchedPath = RNPushManager.unpatchedPath(for: module)
+        if FileManager.default.fileExists(atPath: unpatchedPath) {
+            try FileManager.default.removeItem(atPath: unpatchedPath)
+        }
+
+        // 检测是否存在rollback备份文件
+        let rollbackPath = RNPushManager.rollbackPath(for: module)
+        if FileManager.default.fileExists(atPath: rollbackPath) {
+            try FileManager.default.moveItem(atPath: rollbackPath, toPath: unpatchedPath)
+        }
+    }
+    
+    class public func success(for module: String = "") {
         
     }
     
-    public func pending(for module: String = "") {
+    class public func pending(for module: String = "") {
         
     }
     
-    public func fail(for module: String = "") {
+    class public func fail(for module: String = "") {
         
     }
 }
@@ -214,7 +229,8 @@ extension RNPushManager {
         return sanboxPath() + "/" + (module == "" ? bundleResource : module) + kRollBackSuffixKey
     }
     
-    class public func unzip(_ sourcePath: String, _ destinationPath: String, _ progress: ((_ entry: String, _ entryNumber: Int, _ total: Int) -> Void)?, completion: ((_ path: String, _ success: Bool, _ error: Error?) -> Void)?) {
+    // 解压
+    class func unzip(_ sourcePath: String, _ destinationPath: String, _ progress: ((_ entry: String, _ entryNumber: Int, _ total: Int) -> Void)?, completion: ((_ path: String, _ success: Bool, _ error: Error?) -> Void)?) {
         guard destinationPath != "" else { return }
         DispatchQueue(label: "com.RNPush.unzip").async {
             if FileManager.default.fileExists(atPath: destinationPath) {
@@ -236,7 +252,8 @@ extension RNPushManager {
         }
     }
     
-    class public func copy(_ sourcePath: String, _ destPath: String, _ shouldDeleteDest: Bool = false, _ complection: ((_ error: Error?) -> Void)? = nil) {
+    // 拷贝文件
+    class func copy(_ sourcePath: String, _ destPath: String, _ shouldDeleteDest: Bool = false, _ complection: ((_ error: Error?) -> Void)? = nil) {
         DispatchQueue(label: "com.RNPush.copy").async {
             do {
                 if shouldDeleteDest && FileManager.default.fileExists(atPath: destPath) {
@@ -254,15 +271,49 @@ extension RNPushManager {
         }
     }
     
-    class public func merge(_ sourcePath: String, _ destPath: String, _ deletes: [String] = [], _ completion: ((_ error: Error?) -> Void)? = nil) {
+    // 合并文件夹
+    class func merge(_ sourceDir: String, _ destDir: String, _ deletes: [String] = [], _ completion: ((_ error: Error?) -> Void)? = nil) {
         DispatchQueue(label: "com.RNPush.merge").async {
-            
             do {
-                for deleltePath in deletes {
-                    try FileManager.default.removeItem(atPath: deleltePath)
+                RNPushLog("RNPushManager merge: \(sourceDir)  --->  \(destDir)")
+                var isSourceDirectory: ObjCBool = true
+                var isDestDirectory: ObjCBool = true
+                guard FileManager.default.fileExists(atPath: sourceDir, isDirectory: &isSourceDirectory), isSourceDirectory.boolValue, FileManager.default.fileExists(atPath: destDir, isDirectory: &isDestDirectory), isDestDirectory.boolValue else {
+                    completion?(nil)
+                    return
+                }
+                
+                for deletePath in deletes {
+                    let filePath = destDir + "/" + deletePath
+                    if FileManager.default.fileExists(atPath: filePath) {
+                        try FileManager.default.removeItem(atPath: filePath)
+                    }
+                }
+                
+                if FileManager.default.fileExists(atPath: sourceDir, isDirectory: &isSourceDirectory), isSourceDirectory.boolValue == true, let directoryEnumerator = FileManager.default.enumerator(atPath: sourceDir){
+                    var subPath: String? = directoryEnumerator.nextObject() as? String
+                    while subPath != nil {
+                        let sourceFullPath = sourceDir.appending("/\(subPath!)")
+                        let potentialDestFullPath = destDir.appending("/\(subPath!)")
+                        
+                        let isSourceExists = FileManager.default.fileExists(atPath: sourceFullPath, isDirectory: &isSourceDirectory)
+                        let isDestExists = FileManager.default.fileExists(atPath: potentialDestFullPath, isDirectory: &isDestDirectory)
+                        
+                        if isSourceExists && isSourceDirectory.boolValue {
+                            if !isDestExists {
+                                try FileManager.default.createDirectory(atPath: potentialDestFullPath, withIntermediateDirectories: true, attributes: nil)
+                            }
+                        } else if isSourceExists {
+                            if isDestExists && !isDestDirectory.boolValue {
+                                try FileManager.default.removeItem(atPath: potentialDestFullPath)
+                            }
+                            try FileManager.default.copyItem(atPath: sourceFullPath, toPath: potentialDestFullPath)
+                        }
+                        
+                        subPath = directoryEnumerator.nextObject() as? String
+                    }
                 }
 
-                
                 DispatchQueue.main.async {
                     completion?(nil)
                 }
