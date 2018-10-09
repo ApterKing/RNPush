@@ -22,6 +22,7 @@ public class RNPushManager: NSObject {
     
     static let kBundleResourceKey = "com.RNPush.kBundleResourceKey"
     static let kRollbackKey = "com.RNPush.kRollbackKey"
+    static let kRollbackBugBuildhashKey = "com.RNPush.kRollbackBugBuildhashKey"
     static let kPatchSuffixKey = ".zip"
     static let kRollBackSuffixKey = "_rollback"
     static let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
@@ -80,7 +81,7 @@ public extension RNPushManager {
             rollbackModules.remove(at: index)
             userDefaults.set(rollbackModules, forKey: kRollbackKey)
             
-            rollbackIfNeeded()
+            try? rollback(for: module)
         }
     }
     
@@ -94,9 +95,6 @@ public extension RNPushManager {
                 
                 for module in rollbackModules {
                     try rollback(for: module)
-                    
-                    // 每完成一个回滚，则重设kRollbackKey
-                    removeRollbackIfNeeded(for: module)
                 }
                 DispatchQueue.main.async {
                     completion?(nil)
@@ -109,20 +107,21 @@ public extension RNPushManager {
         }
     }
     
+    // 回滚指定模块
     class func rollback(for module: String) throws {
-        // 删除更新后的patch文件
+        // 删除patch文件
         let patchPath = RNPushManager.patchPath(for: module)
         if FileManager.default.fileExists(atPath: patchPath) {
             try FileManager.default.removeItem(atPath: patchPath)
         }
         
-        // 删除更新后的unpatched文件
+        // 删除unpatched文件
         let unpatchedPath = RNPushManager.unpatchedPath(for: module)
         if FileManager.default.fileExists(atPath: unpatchedPath) {
             try FileManager.default.removeItem(atPath: unpatchedPath)
         }
 
-        // 检测是否存在rollback备份文件
+        // 检测是否存在rollback的备份文件
         let rollbackPath = RNPushManager.rollbackPath(for: module)
         if FileManager.default.fileExists(atPath: rollbackPath) {
             try FileManager.default.moveItem(atPath: rollbackPath, toPath: unpatchedPath)
