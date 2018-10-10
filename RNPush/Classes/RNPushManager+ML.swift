@@ -66,7 +66,7 @@ extension RNPushManager {
         
         // 如果当前的更新存在bug则无需merge
         let url = URL(fileURLWithPath: RNPushManager.unpatchedTmpPath(for: module)).appendingPathComponent("manifest.json")
-        let buildHash = RNPushManager.ml_buildHash(for: url)
+        let buildHash = RNPushManager.ml_buildHash(from: url)
         guard !RNPushManager.isBugBuildHash(for: buildHash) else {
             RNPushManager.ml_clearInvalidate(module)
             completion?(true)
@@ -254,8 +254,8 @@ extension RNPushManager {
         return MLManifestModel.model(for: module)?.buildHash ?? ""
     }
     
-    class func ml_buildHash(for url: URL) -> String {
-        return MLManifestModel.model(for: url)?.buildHash ?? ""
+    class func ml_buildHash(from url: URL) -> String {
+        return MLManifestModel.model(from: url)?.buildHash ?? ""
     }
     
     // 获取manifest.json URL
@@ -273,20 +273,18 @@ extension RNPushManager {
         
         static func model(for module: String) -> MLManifestModel? {
             guard let url = RNPushManager.ml_manifestBundleURL(for: module) else { return nil }
-            return MLManifestModel.model(for: url)
+            return MLManifestModel.model(from: url)
         }
         
-        static func model(for url: URL) -> MLManifestModel? {
-            if let data = try? Data(contentsOf: url), let json = (try? JSONSerialization.jsonObject(with: data, options: .allowFragments)) as? [String: Any] {
-                let model = MLManifestModel()
-                model.appVersion = json["appVersion"] as? String ?? ""
-                model.minAppVersion = json["minAppVersion"] as? String ?? ""
-                model.buildHash = json["buildHash"] as? String ?? ""
-                model.routes = json["routes"] as? [String] ?? []
-                model.dependency = json["dependency"] as? [String] ?? []
-                return model
-            }
-            return nil
+        static func model(from url: URL) -> MLManifestModel? {
+            guard let data = try? Data(contentsOf: url), let json = (try? JSONSerialization.jsonObject(with: data, options: .allowFragments)) as? [String: Any] else { return nil }
+            let model = MLManifestModel()
+            model.appVersion = json["appVersion"] as? String ?? ""
+            model.minAppVersion = json["minAppVersion"] as? String ?? ""
+            model.buildHash = json["buildHash"] as? String ?? ""
+            model.routes = json["routes"] as? [String] ?? []
+            model.dependency = json["dependency"] as? [String] ?? []
+            return model
         }
     }
 }
@@ -328,6 +326,17 @@ fileprivate class RNPushManagerMonitor: NSObject {
     
     @objc func loginStatusChanged(_ notification: NSNotification) {
         let userInfo: [String: Any] = [:]
+//        let userInfo : [String: Any] = [
+//            "name": MLLoginUser.shared.user?.name ?? "" ,
+//            "sectionName": MLLoginUser.shared.user?.sectionName ?? "",
+//            "titleName": MLLoginUser.shared.user?.titleName ?? "",
+//            "hospital": MLLoginUser.shared.user?.hospital ?? "",
+//            "sex": MLLoginUser.shared.user?.sex.rawValue ?? 0,
+//            "type": MLLoginUser.shared.user?.type?.rawValue ?? 0,
+//            "avatar": MLLoginUser.shared.user?.avatar ?? "",
+//            "id": MLLoginUser.shared.user?.userId ?? 0,
+//            "phoneNum": MLLoginUser.shared.user?.cellphone ?? ""
+//        ]
         RNPushManager.ml_bind(userInfo)
     }
 }
