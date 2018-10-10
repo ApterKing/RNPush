@@ -33,23 +33,6 @@ public extension RNPushManager {
             }
         }
     }
-    
-    // 此方法需要在用户登录状态为成功时调用一次，上传数据如下
-    /*
-     "name": MLLoginUser.shared.user?.name ?? "" ,
-     "sectionName": MLLoginUser.shared.user?.sectionName ?? "",
-     "titleName": MLLoginUser.shared.user?.titleName ?? "",
-     "hospital": MLLoginUser.shared.user?.hospital ?? "",
-     "sex": MLLoginUser.shared.user?.sex.rawValue ?? 0,
-     "type": MLLoginUser.shared.user?.type?.rawValue ?? 0,
-     "avatar": MLLoginUser.shared.user?.avatar ?? "",
-     "id": MLLoginUser.shared.user?.userId ?? 0,
-     "phoneNum": MLLoginUser.shared.user?.cellphone ?? ""
-     */
-    class public func ml_bind(userInfo: [String: Any]) {
-        let config = RNPushConfig()
-        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.bind), userInfo, "POST", nil)
-    }
 }
 
 extension RNPushManager {
@@ -215,6 +198,11 @@ extension RNPushManager {
         RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.fail), config.ml_params(), "POST", nil)
     }
     
+    class public func ml_bind(_ userInfo: [String: Any]) {
+        let config = RNPushConfig()
+        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.bind), userInfo, "POST", nil)
+    }
+    
     fileprivate struct MLRNPushManagerApi {
         static let all = "/releases/buildhash/lastest/all"
         static let check = "/releases/checkUpdate"
@@ -303,7 +291,7 @@ extension RNPushManager {
     }
 }
 
-/// MARK: 配置一个监听器，处理模块因状态改变需要进行网络的访问
+/// MARK: 配置一个监听器，处理: 1、模块因状态改变需要进行网络的访问  2、用户登录状态发生改变
 fileprivate class RNPushManagerMonitor: NSObject {
     
     static let `default` = RNPushManagerMonitor()
@@ -318,6 +306,7 @@ fileprivate class RNPushManagerMonitor: NSObject {
         guard monitoring == false else { return }
         monitoring = true
         NotificationCenter.default.addObserver(self, selector: #selector(didChangeNotification(_:)), name: UserDefaults.didChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(loginStatusChanged(_:)), name: NSNotification.Name("newUserLogin"), object: nil)
     }
     
     @objc func didChangeNotification(_ notification: Notification) {
@@ -335,5 +324,10 @@ fileprivate class RNPushManagerMonitor: NSObject {
             }
             userDefaults.set(nil, forKey: RNPushManager.kModuleStatusKey)
         }
+    }
+    
+    @objc func loginStatusChanged(_ notification: NSNotification) {
+        let userInfo: [String: Any] = [:]
+        RNPushManager.ml_bind(userInfo)
     }
 }
