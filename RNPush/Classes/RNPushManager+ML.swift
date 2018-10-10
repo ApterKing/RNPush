@@ -78,6 +78,15 @@ extension RNPushManager {
         let unpatchedPath = RNPushManager.unpatchedPath(for: module)
         let rollbackPath = RNPushManager.rollbackPath(for: module)
         
+        // 如果当前的更新存在bug则无需merge
+        let url = URL(fileURLWithPath: RNPushManager.unpatchedTmpPath(for: module)).appendingPathComponent("manifest.json")
+        let buildHash = RNPushManager.ml_buildHash(for: url)
+        guard !RNPushManager.isBugBuildHash(for: buildHash) else {
+            RNPushManager.ml_clearInvalidate(module)
+            completion?(true)
+            return
+        }
+        
         // 在merge之前备份正常使用的module，用于后续merge或者热更出现错误回滚
         RNPushManager.copy(unpatchedPath, rollbackPath, true) { (_) in
             RNPushManager.merge(unpatchedTmpPath, unpatchedPath, [], { (error) in
@@ -254,6 +263,10 @@ extension RNPushManager {
     // 获取buildHash
     class func ml_buildHash(for module: String = "") -> String {
         return MLManifestModel.model(for: module)?.buildHash ?? ""
+    }
+    
+    class func ml_buildHash(for url: URL) -> String {
+        return MLManifestModel.model(for: url)?.buildHash ?? ""
     }
     
     // 获取manifest.json URL

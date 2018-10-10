@@ -38,7 +38,11 @@ public extension RNPushManager {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         userDefaults.set(bundleResource, forKey: kBundleResourceKey)
         
-        rollbackIfNeeded()
+        rollbackIfNeeded { (error) in
+            if error != nil {  // 再次尝试移除
+                rollbackIfNeeded()
+            }
+        }
     }
 
     /// 模块所在的位置
@@ -64,70 +68,6 @@ public extension RNPushManager {
         return bundleURL(for: module)?.appendingPathComponent(module == "" ? "main.js" : "index.js")
     }
     
-    class public func addRollbackIfNeeded(for module: String) {
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        var rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
-        if let index = rollbackModules.index(of: module) {
-            rollbackModules.remove(at: index)
-        }
-        rollbackModules.append(module)
-        userDefaults.set(rollbackModules, forKey: kRollbackKey)
-    }
-    
-    class public func removeRollbackIfNeeded(for module: String) {
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        var rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
-        if let index = rollbackModules.index(of: module) {
-            rollbackModules.remove(at: index)
-            userDefaults.set(rollbackModules, forKey: kRollbackKey)
-            
-            try? rollback(for: module)
-        }
-    }
-    
-    /// 回滚更新出错的模块
-    class func rollbackIfNeeded(_ completion: ((_ error: Error?) -> Void)? = nil) {
-        
-        DispatchQueue(label: "com.RNPush.rollback").async {
-            do {
-                let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-                let rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
-                
-                for module in rollbackModules {
-                    try rollback(for: module)
-                }
-                DispatchQueue.main.async {
-                    completion?(nil)
-                }
-            } catch let error {
-                DispatchQueue.main.async {
-                    completion?(error)
-                }
-            }
-        }
-    }
-    
-    // 回滚指定模块
-    class func rollback(for module: String) throws {
-        // 删除patch文件
-        let patchPath = RNPushManager.patchPath(for: module)
-        if FileManager.default.fileExists(atPath: patchPath) {
-            try FileManager.default.removeItem(atPath: patchPath)
-        }
-        
-        // 删除unpatched文件
-        let unpatchedPath = RNPushManager.unpatchedPath(for: module)
-        if FileManager.default.fileExists(atPath: unpatchedPath) {
-            try FileManager.default.removeItem(atPath: unpatchedPath)
-        }
-
-        // 检测是否存在rollback的备份文件
-        let rollbackPath = RNPushManager.rollbackPath(for: module)
-        if FileManager.default.fileExists(atPath: rollbackPath) {
-            try FileManager.default.moveItem(atPath: rollbackPath, toPath: unpatchedPath)
-        }
-    }
-    
     class public func success(for module: String = "") {
         
     }
@@ -141,10 +81,95 @@ public extension RNPushManager {
     }
 }
 
+
+/// MARK: 回滚
+extension RNPushManager {
+    
+    // 添加某个模块到待回滚队列
+    class public func addRollbackIfNeeded(for module: String) {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        var rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
+        if !rollbackModules.contains(module) {
+            rollbackModules.append(module)
+        }
+        userDefaults.set(rollbackModules, forKey: kRollbackKey)
+    }
+    
+    // 将某个模块移除回滚队列
+    class public func removeRollbackIfNeeded(for module: String) {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        var rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
+        if let index = rollbackModules.index(of: module) {
+            rollbackModules.remove(at: index)
+        }
+        userDefaults.set(rollbackModules, forKey: kRollbackKey)
+    }
+    
+    // 检测某个构建版本是否存在bug
+    class func isBugBuildHash(for buildHash: String) -> Bool {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        let rollbackBugBuildhashs = userDefaults.array(forKey: kRollbackBugBuildhashKey) as? [String] ?? []
+        return rollbackBugBuildhashs.contains(buildHash)
+    }
+    
+    // 回滚更新出错的所有模块
+    class func rollbackIfNeeded(_ completion: ((_ error: Error?) -> Void)? = nil) {
+        DispatchQueue(label: "com.RNPush.rollback").async {
+            do {
+                let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+                let rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
+                
+                for module in rollbackModules {
+                    try rollback(for: module, recordAsBug: true)
+                    removeRollbackIfNeeded(for: module)
+                }
+                DispatchQueue.main.async {
+                    completion?(nil)
+                }
+            } catch let error {
+                DispatchQueue.main.async {
+                    completion?(error)
+                }
+            }
+        }
+    }
+    
+    // 回滚指定模块
+    class func rollback(for module: String, recordAsBug: Bool = false) throws {
+        if recordAsBug { // 记录当前回滚模块的buildHash，下次如果是此buildHash则不要更新此版本
+            let buildHash = RNPushManager.ml_buildHash(for: module)
+            let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+            var rollbackBugBuildhashs = userDefaults.array(forKey: kRollbackBugBuildhashKey) as? [String] ?? []
+            if !rollbackBugBuildhashs.contains(buildHash) {
+                rollbackBugBuildhashs.append(buildHash)
+            }
+            userDefaults.set(rollbackBugBuildhashs, forKey: kRollbackBugBuildhashKey)
+        }
+
+        // 删除patch文件
+        let patchPath = RNPushManager.patchPath(for: module)
+        if FileManager.default.fileExists(atPath: patchPath) {
+            try FileManager.default.removeItem(atPath: patchPath)
+        }
+        
+        // 删除unpatched文件
+        let unpatchedPath = RNPushManager.unpatchedPath(for: module)
+        if FileManager.default.fileExists(atPath: unpatchedPath) {
+            try FileManager.default.removeItem(atPath: unpatchedPath)
+        }
+        
+        // 检测是否存在rollback的备份文件
+        let rollbackPath = RNPushManager.rollbackPath(for: module)
+        if FileManager.default.fileExists(atPath: rollbackPath) {
+            try FileManager.default.moveItem(atPath: rollbackPath, toPath: unpatchedPath)
+        }
+    }
+
+}
+
 /// MARK: 网络相关
 extension RNPushManager {
     
-    /// 网络请求
     class public func request(_ urlString: String, _ params: [String: Any]? = nil, _ httpMethod: String?, _ completion: ((Data?, URLResponse?, Error?) -> Void)?) {
         
         guard let url = URL(string: urlString) else { return }
@@ -169,7 +194,6 @@ extension RNPushManager {
         task.resume()
     }
     
-    /// 下载文件
     class public func download(urlPath: String, save filePath: String?, progress: ((_ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?, completion: ((_ path: String, _ error: Error?) -> Void)?) {
         var savePath = filePath
         if savePath == nil {
@@ -278,7 +302,9 @@ extension RNPushManager {
                 var isSourceDirectory: ObjCBool = true
                 var isDestDirectory: ObjCBool = true
                 guard FileManager.default.fileExists(atPath: sourceDir, isDirectory: &isSourceDirectory), isSourceDirectory.boolValue, FileManager.default.fileExists(atPath: destDir, isDirectory: &isDestDirectory), isDestDirectory.boolValue else {
-                    completion?(nil)
+                    DispatchQueue.main.async {
+                        completion?(nil)
+                    }
                     return
                 }
                 
@@ -308,7 +334,6 @@ extension RNPushManager {
                             }
                             try FileManager.default.copyItem(atPath: sourceFullPath, toPath: potentialDestFullPath)
                         }
-                        
                         subPath = directoryEnumerator.nextObject() as? String
                     }
                 }
