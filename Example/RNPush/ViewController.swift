@@ -27,7 +27,7 @@ class ViewController: UIViewController {
     }
     
     @objc func gestureAction(_ gesture: UIGestureRecognizer) {
-        RNPushManager.ml_updateIfNeeded("TimeSpace") { (shouldReload) in
+        RNPushManager.ml_updateIfNeeded("MissionCenter") { (shouldReload) in
             print("gestureAction -------  \(shouldReload)      jump:  \(RNPushManager.ml_validate(module: "TimeSpace", route: "TSPublish"))    \(RNPushManager.ml_validate(module: "TimeSpace", route: "TSPublish"))")
         }
 

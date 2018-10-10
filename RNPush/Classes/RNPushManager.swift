@@ -23,11 +23,18 @@ public class RNPushManager: NSObject {
     static let kBundleResourceKey = "com.RNPush.kBundleResourceKey"
     static let kRollbackKey = "com.RNPush.kRollbackKey"
     static let kRollbackBugBuildhashKey = "com.RNPush.kRollbackBugBuildhashKey"
+    static let kModuleUpdatedBuildhashKey = "com.RNPuhs.kUpdatedBuildhashKey"
+    static let kModuleStatusKey = "com.RNPush.kModuleStatusKey"
     static let kPatchSuffixKey = ".zip"
     static let kRollBackSuffixKey = "_rollback"
     static let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
     static let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     
+    struct RNPushManagerStatus {
+        static let success = 0
+        static let pending = 1
+        static let fail = 2
+    }
 }
 
 public extension RNPushManager {
@@ -68,19 +75,80 @@ public extension RNPushManager {
         return bundleURL(for: module)?.appendingPathComponent(module == "" ? "main.js" : "index.js")
     }
     
-    class public func success(for module: String = "") {
-        
+    class public func success(for module: String) {
+        RNPushManager.removeRollbackIfNeeded(for: module)
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        var statusDic = userDefaults.dictionary(forKey: kModuleStatusKey) as? [String: Int] ?? [:]
+        statusDic[module] = RNPushManagerStatus.success
+        userDefaults.set(statusDic, forKey: kModuleStatusKey)
     }
     
-    class public func pending(for module: String = "") {
-        
+    class public func pending(for module: String) {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        var statusDic = userDefaults.dictionary(forKey: kModuleStatusKey) as? [String: Int] ?? [:]
+        statusDic[module] = RNPushManagerStatus.pending
+        userDefaults.set(statusDic, forKey: kModuleStatusKey)
     }
     
-    class public func fail(for module: String = "") {
-        
+    class public func fail(for module: String) {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        var statusDic = userDefaults.dictionary(forKey: kModuleStatusKey) as? [String: Int] ?? [:]
+        statusDic[module] = RNPushManagerStatus.fail
+        userDefaults.set(statusDic, forKey: kModuleStatusKey)
+    }
+    
+    // 修改已经更新模块的buildHash
+    class func updateBuildHash(for module: String, buildHash: String) {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        var buildHashDic = userDefaults.dictionary(forKey: kModuleUpdatedBuildhashKey) as? [String: String] ?? [:]
+        buildHashDic[module] = buildHash
+        userDefaults.set(buildHashDic, forKey: kModuleUpdatedBuildhashKey)
+    }
+    
+    class func updatedBuildHash(for module: String) -> String {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        var buildHashDic = userDefaults.dictionary(forKey: kModuleUpdatedBuildhashKey) as? [String: String] ?? [:]
+        return buildHashDic[module] ?? ""
     }
 }
 
+/// MARK: 网络相关
+extension RNPushManager {
+    
+    class public func request(_ urlString: String, _ params: [String: Any]? = nil, _ httpMethod: String?, _ completion: ((Data?, URLResponse?, Error?) -> Void)?) {
+        
+        guard let url = URL(string: urlString) else { return }
+        
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
+        request.httpMethod = httpMethod
+        var httpBody = ""
+        if let bodies = params {
+            httpBody = bodies.reduce("") { (result, param) -> String in
+                return "\(result)\(result == "" ? "" : "&")\(param.key)=\(param.value)"
+            }
+            request.httpBody = httpBody.data(using: .utf8)
+        }
+        RNPushLog("RNPushManager request: \(urlString)  \n params : \(httpBody)")
+        
+        let config = URLSessionConfiguration.default
+        let session = URLSession(configuration: config)
+        let task = session.dataTask(with: request) { (data, response, error) in
+            RNPushLog("RNPushManager response:  \(response?.url?.path ?? "")   \(String(describing: data == nil ? "" : String(data: data!, encoding: String.Encoding.utf8)))  \n error: \(String(describing: error))")
+            completion?(data, response, error)
+        }
+        task.resume()
+    }
+    
+    class public func download(urlPath: String, save filePath: String?, progress: ((_ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?, completion: ((_ path: String, _ error: Error?) -> Void)?) {
+        var savePath = filePath
+        if savePath == nil {
+            savePath = RNPushManager.patchPath()
+        }
+        
+        RNPushDownloader.download(urlPath: urlPath, save: savePath!, progress: progress, completion: completion)
+    }
+    
+}
 
 /// MARK: 回滚
 extension RNPushManager {
@@ -137,7 +205,7 @@ extension RNPushManager {
     // 回滚指定模块
     class func rollback(for module: String, recordAsBug: Bool = false) throws {
         if recordAsBug { // 记录当前回滚模块的buildHash，下次如果是此buildHash则不要更新此版本
-            let buildHash = RNPushManager.ml_buildHash(for: module)
+            let buildHash = RNPushManager.updatedBuildHash(for: module)
             let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
             var rollbackBugBuildhashs = userDefaults.array(forKey: kRollbackBugBuildhashKey) as? [String] ?? []
             if !rollbackBugBuildhashs.contains(buildHash) {
@@ -165,44 +233,6 @@ extension RNPushManager {
         }
     }
 
-}
-
-/// MARK: 网络相关
-extension RNPushManager {
-    
-    class public func request(_ urlString: String, _ params: [String: Any]? = nil, _ httpMethod: String?, _ completion: ((Data?, URLResponse?, Error?) -> Void)?) {
-        
-        guard let url = URL(string: urlString) else { return }
-        
-        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
-        request.httpMethod = httpMethod
-        var httpBody = ""
-        if let bodies = params {
-            httpBody = bodies.reduce("") { (result, param) -> String in
-                return "\(result)\(result == "" ? "" : "&")\(param.key)=\(param.value)"
-            }
-            request.httpBody = httpBody.data(using: .utf8)
-        }
-        RNPushLog("RNPushManager request: \(urlString)  \n params : \(httpBody)")
-
-        let config = URLSessionConfiguration.default
-        let session = URLSession(configuration: config)
-        let task = session.dataTask(with: request) { (data, response, error) in
-            RNPushLog("RNPushManager response:  \(response?.url?.path ?? "")   \(String(describing: data == nil ? "" : String(data: data!, encoding: String.Encoding.utf8)))  \n error: \(String(describing: error))")
-            completion?(data, response, error)
-        }
-        task.resume()
-    }
-    
-    class public func download(urlPath: String, save filePath: String?, progress: ((_ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?, completion: ((_ path: String, _ error: Error?) -> Void)?) {
-        var savePath = filePath
-        if savePath == nil {
-            savePath = RNPushManager.patchPath()
-        }
-        
-        RNPushDownloader.download(urlPath: urlPath, save: savePath!, progress: progress, completion: completion)
-    }
-    
 }
 
 /// MARK: 本地文件处理

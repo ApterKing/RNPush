@@ -15,6 +15,9 @@ public extension RNPushManager {
     /// MARK: 检查文件是否需要下载，注意每次调用下载某个某个模块之前一定要检查所依赖的模块是否已经被下载，如果未被下载则需下载
     class public func ml_updateIfNeeded(_ module: String, _ completion: ((_ shouldReload: Bool) -> Void)? = nil) {
         
+        // 用于监听模块当前各种更新状态
+        RNPushManagerMonitor.default.registerUserdefaultDidChanged()
+
         // 这里的modules 应当包含依赖的相关模块
         var modules = [module]
         modules.append(contentsOf: MLManifestModel.model(for: module)?.dependency ?? [])
@@ -92,6 +95,7 @@ extension RNPushManager {
             RNPushManager.merge(unpatchedTmpPath, unpatchedPath, [], { (error) in
                 let _mergeSuccess = error == nil
                 if _mergeSuccess { // 合并成功清除不必要的文件
+                    RNPushManager.updateBuildHash(for: module, buildHash: ml_buildHash(for: module))
                     RNPushManager.ml_clearInvalidate(module)
                 } else { // 否则则需要回滚该模块
                     try? RNPushManager.rollback(for: module)
@@ -152,7 +156,7 @@ extension RNPushManager {
                         } else {
                             let model = MLCheckModel.model(from: jsonData)
                             if model.shouldUpdate {
-                                RNPushManager.ml_pending(module)
+                                RNPushManager.pending(for: module)
                                 // 下载
                                 RNPushManager.download(urlPath: model.url, save: RNPushManager.patchPath(for: module), progress: nil, completion: { (path, downloadError) in
                                     if downloadError != nil {
@@ -195,21 +199,18 @@ extension RNPushManager {
     
     class fileprivate func ml_success(_ module: String) {
         RNPushLog("RNPushManager ml_success : \(module)")
-        RNPushManager.success(for: module)
         let config = RNPushConfig(module)
         RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.success), config.ml_params(), "POST", nil)
     }
     
     class fileprivate func ml_pending(_ module: String) {
         RNPushLog("RNPushManager ml_pending : \(module)")
-        RNPushManager.pending(for: module)
         let config = RNPushConfig(module)
         RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.pending), config.ml_params(), "POST", nil)
     }
     
     class fileprivate func ml_fail(_ module: String) {
         RNPushLog("RNPushManager ml_fail : \(module)")
-        RNPushManager.fail(for: module)
         let config = RNPushConfig(module)
         RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.fail), config.ml_params(), "POST", nil)
     }
@@ -298,6 +299,41 @@ extension RNPushManager {
                 return model
             }
             return nil
+        }
+    }
+}
+
+/// MARK: 配置一个监听器，处理模块因状态改变需要进行网络的访问
+fileprivate class RNPushManagerMonitor: NSObject {
+    
+    static let `default` = RNPushManagerMonitor()
+    
+    lazy var monitoring: Bool = false
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    func registerUserdefaultDidChanged() {
+        guard monitoring == false else { return }
+        monitoring = true
+        NotificationCenter.default.addObserver(self, selector: #selector(didChangeNotification(_:)), name: UserDefaults.didChangeNotification, object: nil)
+    }
+    
+    @objc func didChangeNotification(_ notification: Notification) {
+        DispatchQueue(label: "com.RNPushManager.monitor").async {
+            guard let userDefaults = notification.object as? UserDefaults, let statusDic = userDefaults.dictionary(forKey: RNPushManager.kModuleStatusKey) as? [String: Int] else { return }
+            for (module, status) in statusDic {
+                switch status {
+                case RNPushManager.RNPushManagerStatus.success:
+                    RNPushManager.ml_success(module)
+                case RNPushManager.RNPushManagerStatus.pending:
+                    RNPushManager.ml_pending(module)
+                default:
+                    RNPushManager.ml_fail(module)
+                }
+            }
+            userDefaults.set(nil, forKey: RNPushManager.kModuleStatusKey)
         }
     }
 }
