@@ -27,10 +27,13 @@ class ViewController: UIViewController {
     }
     
     @objc func gestureAction(_ gesture: UIGestureRecognizer) {
-        RNPushManager.ml_updateIfNeeded("MissionCenter") { (shouldReload) in
+        RNPushManager.ml_updateIfNeeded("HuaFang") { (shouldReload) in
             print("gestureAction -------  \(shouldReload)      jump:  \(RNPushManager.ml_validate(module: "TimeSpace", route: "TSPublish"))    \(RNPushManager.ml_validate(module: "TimeSpace", route: "TSPublish"))")
         }
-
+        
+        let test = Test()
+        test.fuck()
+        test.fuck()
     }
 
 }

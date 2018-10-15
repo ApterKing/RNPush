@@ -35,6 +35,7 @@ public class RNPushManager: NSObject {
         static let pending = 1
         static let fail = 2
     }
+    
 }
 
 public extension RNPushManager {
@@ -45,23 +46,23 @@ public extension RNPushManager {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         userDefaults.set(bundleResource, forKey: kBundleResourceKey)
         
-        rollbackIfNeeded { (error) in
-            if error != nil {  // 再次尝试移除
-                rollbackIfNeeded()
-            }
-        }
+        preloadBridge()
+        rollbackIfNeeded()
     }
-
+    
     /// 模块所在的位置
     class public func bundleURL(for module: String = "") -> URL? {
-        // 从sanbox中获取bundleURL
+        let url: URL?
         let bundlePath = RNPushManager.unpatchedPath(for: module)
         if FileManager.default.fileExists(atPath: bundlePath) {
-            return URL(fileURLWithPath: bundlePath)
+            // 从sanbox中获取bundleURL
+            url = URL(fileURLWithPath: bundlePath)
+        } else {
+            // 从应用包中获取bundleURL
+            url = binaryBundleURL(for: module)
         }
-        
-        // 从应用包中获取bundleURL
-        return binaryBundleURL(for: module)
+        RNPushLog("RNPushManager -----  bundleURL : \(url?.path ?? "")")
+        return url
     }
     
     class public func binaryBundleURL(for module: String = "") -> URL? {
@@ -293,8 +294,10 @@ extension RNPushManager {
             RNPushLog("RNPushManager unzip: \(sourcePath)  successed : \(destinationPath)")
             SSZipArchive.unzipFile(atPath: sourcePath, toDestination: destinationPath, progressHandler: { (entry, info, entryNumber, total) in
                 DispatchQueue.main.async {
-                    RNPushLog("RNPushManager unzip progress: \(entry)   \(entryNumber)  \(total)")
-                    progress?(entry, entryNumber, total)
+                    DispatchQueue.main.async {
+                        RNPushLog("RNPushManager unzip progress: \(entry)   \(entryNumber)  \(total)")
+                        progress?(entry, entryNumber, total)
+                    }
                 }
             }, completionHandler: { (path, successed, error) in
                 DispatchQueue.main.async {

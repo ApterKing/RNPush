@@ -10,6 +10,7 @@
 #endif
 #endif
 
+#import "RCTBridge+RNPush.h"
 
 FOUNDATION_EXPORT double RNPushVersionNumber;
 FOUNDATION_EXPORT const unsigned char RNPushVersionString[];

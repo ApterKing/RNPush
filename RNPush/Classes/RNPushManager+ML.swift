@@ -25,9 +25,16 @@ public extension RNPushManager {
             if checkSuccess {
                 if needReload {
                     RNPushManager.addRollbackIfNeeded(for: module)
+                    
+                    // 重新预加载base包
+                    RNPushManager.preloadBridge(module: "Base")
+                    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1, execute: {
+                        completion?(true)
+                        RNPushManager.removeRollbackIfNeeded(for: module)
+                    })
+                } else {
+                    completion?(false)
                 }
-                completion?(needReload)
-                RNPushManager.removeRollbackIfNeeded(for: module)
             } else {
                 completion?(false)
             }
@@ -325,18 +332,18 @@ fileprivate class RNPushManagerMonitor: NSObject {
     }
     
     @objc func loginStatusChanged(_ notification: NSNotification) {
-        let userInfo: [String: Any] = [:]
-//        let userInfo : [String: Any] = [
-//            "name": MLLoginUser.shared.user?.name ?? "" ,
-//            "sectionName": MLLoginUser.shared.user?.sectionName ?? "",
-//            "titleName": MLLoginUser.shared.user?.titleName ?? "",
-//            "hospital": MLLoginUser.shared.user?.hospital ?? "",
-//            "sex": MLLoginUser.shared.user?.sex.rawValue ?? 0,
-//            "type": MLLoginUser.shared.user?.type?.rawValue ?? 0,
-//            "avatar": MLLoginUser.shared.user?.avatar ?? "",
-//            "id": MLLoginUser.shared.user?.userId ?? 0,
-//            "phoneNum": MLLoginUser.shared.user?.cellphone ?? ""
-//        ]
+//        let userInfo: [String: Any] = [:]
+        let userInfo : [String: Any] = [
+            "name": MLLoginUser.shared.user?.name ?? "" ,
+            "sectionName": MLLoginUser.shared.user?.sectionName ?? "",
+            "titleName": MLLoginUser.shared.user?.titleName ?? "",
+            "hospital": MLLoginUser.shared.user?.hospital ?? "",
+            "sex": MLLoginUser.shared.user?.sex.rawValue ?? 0,
+            "type": MLLoginUser.shared.user?.type?.rawValue ?? 0,
+            "avatar": MLLoginUser.shared.user?.avatar ?? "",
+            "id": MLLoginUser.shared.user?.userId ?? 0,
+            "phoneNum": MLLoginUser.shared.user?.cellphone ?? ""
+        ]
         RNPushManager.ml_bind(userInfo)
     }
 }
