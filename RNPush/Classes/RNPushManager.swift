@@ -171,6 +171,9 @@ extension RNPushManager {
         var rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
         if let index = rollbackModules.index(of: module) {
             rollbackModules.remove(at: index)
+            
+            // 移除则意味着加载成功
+            success(for: module)
         }
         userDefaults.set(rollbackModules, forKey: kRollbackKey)
     }
@@ -190,6 +193,9 @@ extension RNPushManager {
                 let rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
                 
                 for module in rollbackModules {
+                    // 需要回滚则意味着失败
+                    fail(for: module)
+                    
                     try rollback(for: module, recordAsBug: true)
                     removeRollbackIfNeeded(for: module)
                 }
