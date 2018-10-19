@@ -1,0 +1,175 @@
+//
+//  RNRootViewController.swift
+//  Medlinker
+//
+//  Created by 王洋 on 2017/7/12.
+//  Copyright © 2017年 medlinker. All rights reserved.
+//
+
+import UIKit
+import React
+import RxSwift
+import RxCocoa
+
+class RNRootViewController: MLViewController, UIGestureRecognizerDelegate ,MLStatisticsPageViewProtocol {
+    
+    fileprivate(set) var moduleName = ""
+    fileprivate(set) var params: [String : Any]?
+    private var loadingView: UIView {
+        get {
+            let view = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.width, height: UIScreen.height))
+            let label = UILabel(frame: CGRect(x: 0, y: (UIScreen.height - 24) / 2.0, width: UIScreen.width, height: 24))
+            label.text = "加载中..."
+            label.textAlignment = .center
+            label.textColor = MLTheme.color.gray
+            label.font = MLTheme.font.pingFangSCMedium(size: 18)
+            view.addSubview(label)
+            return view
+        }
+    }
+    fileprivate(set) var bridge: RCTBridge?
+    private var rootView: RCTRootView?
+    fileprivate(set) var detectedBridge: RCTBridge?
+    fileprivate(set) var detectedView: RCTRootView?
+    
+    private var isAllowsBackForwardNavigationGestures  = false
+    
+    var statusStyle: Int = 1 {
+        didSet {
+            setNeedsStatusBarAppearanceUpdate()
+        }
+    }
+    
+    class func register(deployKey: String, resourcesBundle: String) {
+        #if DEBUG
+        RNPushManager.register(serverUrl: "http://pm.qa.medlinker.com/api",
+                               deploymentKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibWVkLXJuLWlvcyIsImVudiI6ImRldmVsb3BtZW50IiwiaWF0IjoxNTMwNjk3MzAyfQ.43XEuT6zm8l9OSiwGoPzDYNl6ULHzBgwCs5U9yNo6r0",
+                               bundleResource: "RNResources")
+        #else
+        RNPushManager.register(serverUrl: "https://pm.medlinker.com/api",
+                               deploymentKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibWVkLXJuLWlvcyIsImVudiI6InByb2R1Y3Rpb24iLCJpYXQiOjE1MzA2OTczMDJ9.JTtq93c1a-ysiS_kUCZhuvgtRK0_rVJkIvn_968LJPI",
+                               bundleResource: "RNResources")
+        #endif
+    }
+    
+    init(moduleName: String,
+         params: [String : Any]?,
+         loadingView: UIView? = nil) {
+        
+        super.init(nibName: nil, bundle: nil)
+        self.moduleName = moduleName
+        self.params = params
+        
+        openRootView()
+    }
+    
+    init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        detectedBridge?.invalidate()
+        detectedView?.contentViewInvalidated()
+        detectedView = nil
+        
+        bridge?.invalidate()
+        rootView?.contentViewInvalidated()
+        rootView = nil
+    }
+    
+    override func loadView() {
+        super.loadView()
+        
+        // 小模块预加载快于页面view创建
+        if rootView != nil && view != rootView {
+            RNPushManager.addRollbackIfNeeded(for: moduleName)
+            view = rootView
+        }
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        if #available(iOS 11.0, *) {
+        } else {
+            self.automaticallyAdjustsScrollViewInsets = false
+        }
+        navigationController?.navigationBar.isHidden = true
+        
+        RNPushLog("RNPushManager ------- openRootView   ----- end  --  1")
+        
+        //        #if !DEBUG
+        RNPushManager.ml_updateIfNeeded(moduleName) { [weak self] (shouldReload) in
+            if shouldReload, let weakSelf = self {
+                // 这里需要检测一下Base包是否存在错误
+                RNPushManager.preloadBridge(module: "Base")
+                
+                weakSelf.detectedBridge = RNPushManager.preloadedBridge(for: "Base", potentialPreload: false)
+                weakSelf.detectedView = RCTRootView(bridge: weakSelf.detectedBridge!, moduleName: "Base", initialProperties: nil)
+                RNPushManager.addRollbackIfNeeded(for: "Base")
+                weakSelf.view.insertReactSubview(weakSelf.detectedView, at: 0)
+                
+                RNPushManager.preloadBridge(module: "Base")
+                RNPushLog("RNPushManager ------- openRootView   ----- detected")
+            }
+        }
+        //        #endif
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // 系统会重置delegate，需要每次进入延时设置；allowsBackForwardNavigationGestures处理同理
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let weakSelf = self else { return }
+            weakSelf.rt_navigationController?.interactivePopGestureRecognizer?.delegate = weakSelf
+        }
+    }
+    
+    @objc open func openRootView() {
+        RNPushLog("RNPushManager ------- openRootView   ----- start")
+        bridge = RNPushManager.preloadedBridge(for: "Base", potentialPreload: true)
+        guard let url = RNPushManager.bridgeBundleURL(for: moduleName) else { return }
+        bridge?.enqueueApplicationModule(moduleName, at: url, onSourceLoad: { [weak self] (error, source) in
+            guard let weakSelf = self, error == nil else { return }
+            weakSelf.rootView = RCTRootView(bridge: weakSelf.bridge, moduleName: weakSelf.moduleName, initialProperties: RCTRootView.initialProperties(params: weakSelf.params))
+            weakSelf.rootView?.setRuningJSView(weakSelf.loadingView)
+            if weakSelf.isViewLoaded {  // 大模块第一次加载慢于view创建
+                RNPushManager.addRollbackIfNeeded(for: weakSelf.moduleName)
+                weakSelf.view = weakSelf.rootView
+            }
+            RNPushLog("RNPushManager ------- openRootView   ----- end")
+        })
+    }
+    
+    // 返回
+    @objc func goBack() {
+        DispatchQueue.main.async { [weak self] in
+            guard let weakSelf = self else { return }
+            weakSelf.rt_navigationController?.interactivePopGestureRecognizer?.delegate = weakSelf
+        }
+    }
+    
+    // MARK: vc需要支持的属性
+    //导航栏的颜色
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        get {
+            return statusStyle==1 ? .default : .lightContent
+        }
+    }
+    
+    //手势
+    func allowsBackForwardNavigationGestures(_ isAllow: Bool) {
+        isAllowsBackForwardNavigationGestures = isAllow
+        rt_navigationController?.interactivePopGestureRecognizer?.delegate = self
+    }
+    
+    //设置手势代理
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return isAllowsBackForwardNavigationGestures
+    }
+}
+
+
