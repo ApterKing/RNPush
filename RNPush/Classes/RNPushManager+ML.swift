@@ -14,31 +14,22 @@ public extension RNPushManager {
     
     /// MARK: 检查文件是否需要下载，注意每次调用下载某个某个模块之前一定要检查所依赖的模块是否已经被下载，如果未被下载则需下载
     class public func ml_updateIfNeeded(_ module: String, _ completion: ((_ shouldReload: Bool) -> Void)? = nil) {
-        
         // 用于监听模块当前各种更新状态
         RNPushManagerMonitor.default.registerUserdefaultDidChanged()
-
+        
         // 这里的modules 应当包含依赖的相关模块
-        var modules = [module]
+        var modules: [String] = []
         modules.append(contentsOf: MLManifestModel.model(for: module)?.dependency ?? [])
+        modules.append(module)
         RNPushManager.ml_checks(modules) { (checkSuccess, needReload) in
-            if checkSuccess {
-                if needReload {
-                    RNPushManager.addRollbackIfNeeded(for: module)
-                    
-                    // 重新预加载base包
-                    RNPushManager.preloadBridge(module: "Base")
-                    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1, execute: {
-                        completion?(true)
-                        RNPushManager.removeRollbackIfNeeded(for: module)
-                    })
-                } else {
-                    completion?(false)
-                }
-            } else {
-                completion?(false)
+            DispatchQueue.main.async {
+                completion?(checkSuccess && needReload)
             }
         }
+    }
+
+    class public func ml_updateIfNeeded(_ module: String, _ addRollbackIfNeeded: Bool = true, _ completion: ((_ shouldReload: Bool) -> Void)? = nil) {
+        
     }
 }
 
@@ -48,6 +39,7 @@ extension RNPushManager {
     class fileprivate func ml_checks(_ modules: [String], _ completion: @escaping ((_ checkSuccess: Bool, _ needReload: Bool) -> Void)) {
         var _successes: [Bool] = []
         var _needReload = false
+        
         for module in modules {
             RNPushManager.ml_check_pre(module) { (success, reload) in
                 objc_sync_enter(check_lock)
@@ -71,7 +63,7 @@ extension RNPushManager {
         let unpatchedPath = RNPushManager.unpatchedPath(for: module)
         let rollbackPath = RNPushManager.rollbackPath(for: module)
         
-        // 如果当前的更新存在bug则无需merge
+        // 如果当前的下载的版本存在线上bug则不能merge
         let url = URL(fileURLWithPath: RNPushManager.unpatchedTmpPath(for: module)).appendingPathComponent("manifest.json")
         let buildHash = RNPushManager.ml_buildHash(from: url)
         guard !RNPushManager.isBugBuildHash(for: buildHash) else {
@@ -86,7 +78,7 @@ extension RNPushManager {
                 let _mergeSuccess = error == nil
                 if _mergeSuccess { // 合并成功清除不必要的文件
                     RNPushManager.updateBuildHash(for: module, buildHash: ml_buildHash(for: module))
-                    RNPushManager.ml_clearInvalidate(module)
+//                    RNPushManager.ml_clearInvalidate(module)
                 } else { // 否则则需要回滚该模块
                     try? RNPushManager.rollback(for: module)
                 }
@@ -115,8 +107,8 @@ extension RNPushManager {
 extension RNPushManager {
     
     // 检测单个module是否需要重新reload;
-    // parameter: checkSuccess 标识检测成功
-    // parameter: shouldReload 标识是否需要重新加载
+    // completion parameter: checkSuccess 标识检测成功
+    // completion parameter: shouldReload 标识是否需要重新加载
     class fileprivate func ml_check_pre(_ module: String, _ completion: @escaping ((_ checkSuccess: Bool, _ shouldReload: Bool) -> Void)) {
         // 如果当前的模块是最新版本，并且在sanbox中没有包含模块，那么将打包中的文件拷贝至外部（用于merge）
         let destDir = RNPushManager.unpatchedPath(for: module)
@@ -207,7 +199,11 @@ extension RNPushManager {
     
     class public func ml_bind(_ userInfo: [String: Any]) {
         let config = RNPushConfig()
-        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.bind), userInfo, "POST", nil)
+        var params: [String: Any] = config.ml_params()
+        if let jsonData = try? JSONSerialization.data(withJSONObject: userInfo, options: .prettyPrinted), let jsonString = String(data: jsonData, encoding: .utf8) {
+            params["info"] = jsonString
+        }
+        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.bind), params, "POST", nil)
     }
     
     fileprivate struct MLRNPushManagerApi {
@@ -332,7 +328,6 @@ fileprivate class RNPushManagerMonitor: NSObject {
     }
     
     @objc func loginStatusChanged(_ notification: NSNotification) {
-//        let userInfo: [String: Any] = [:]
         let userInfo : [String: Any] = [
             "name": MLLoginUser.shared.user?.name ?? "" ,
             "sectionName": MLLoginUser.shared.user?.sectionName ?? "",

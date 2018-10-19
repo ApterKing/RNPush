@@ -46,8 +46,9 @@ public extension RNPushManager {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         userDefaults.set(bundleResource, forKey: kBundleResourceKey)
         
-        preloadBridge()
-        rollbackIfNeeded()
+        rollbackIfNeeded { (_) in
+            preloadBridge()
+        }
     }
     
     /// 模块所在的位置
@@ -129,12 +130,12 @@ extension RNPushManager {
             }
             request.httpBody = httpBody.data(using: .utf8)
         }
-        RNPushLog("RNPushManager request: \(urlString)  \n params : \(httpBody)")
+        RNPushLog("RNPushManager  request--request: \(urlString)     --   params : \(httpBody)")
         
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config)
         let task = session.dataTask(with: request) { (data, response, error) in
-            RNPushLog("RNPushManager response:  \(response?.url?.path ?? "")   \(String(describing: data == nil ? "" : String(data: data!, encoding: String.Encoding.utf8)))  \n error: \(String(describing: error))")
+            RNPushLog("RNPushManager  request--response:  \(response?.url?.path ?? "")   \(String(describing: data == nil ? "" : String(data: data!, encoding: String.Encoding.utf8)))  \n error: \(String(describing: error))")
             completion?(data, response, error)
         }
         task.resume()
