@@ -111,7 +111,7 @@ static NSString *kExtraModule = @"kExtraModule";
         // 在reload时还需要将extraModule重新加载，并且将extraModule置空
         if (extraModule.count != 0) {
             strongSelf.extraModule = [NSDictionary dictionary];
-            [self enqueueApplicationModules:self.extraModule.allKeys at:self.extraModule.allValues onSourceLoad:onSourceLoad];
+            [self enqueueApplicationModules:extraModule.allKeys at:extraModule.allValues onSourceLoad:onSourceLoad];
         } else {
             onSourceLoad(error, source);
         }

@@ -25,11 +25,6 @@ public extension RNPushManager {
         return bridge
     }
     
-    // 创建一个新的bridge
-    class func bridge(for module: String) -> RCTBridge? {
-        return RCTBridge(delegate: RNPushRCTBridgeDelegate(module), launchOptions: nil)
-    }
-    
     class func preloadBridge(module: String = "Base") {
         // 预加载前获取当前池中如果存在bridge，则需要invalidate
         for (_, bridge) in bridgePool {
@@ -41,6 +36,11 @@ public extension RNPushManager {
         let bridge = RCTBridge(delegate: RNPushRCTBridgeDelegate(module), launchOptions: nil)
         pool["Base"] = bridge
         bridgePool = pool
+    }
+    
+    // 创建一个新的bridge
+    class func bridge(for module: String) -> RCTBridge? {
+        return RCTBridge(delegate: RNPushRCTBridgeDelegate(module), launchOptions: nil)
     }
     
     static fileprivate var kBridgePoolKey = "kBridgePoolKey"
@@ -75,7 +75,7 @@ fileprivate class RNPushRCTBridgeDelegate: NSObject, RCTBridgeDelegate {
         return true
     }
     
-    /// MARK: 自定义加载方式
+    /// MARK: 自定义加载方式 ，当bridge.reload()时无需重新添加其他module
     func loadSource(for bridge: RCTBridge!, with loadCallback: RCTSourceLoadBlock!) {
         var modules: [String] = []
         var bundleURLs: [URL] = []

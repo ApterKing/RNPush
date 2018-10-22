@@ -10,7 +10,6 @@ import SSZipArchive
 
 
 /// MARK: global
-let RNPushNotificationName = Notification.Name("kRNPushNotificationName")
 let kSuitNameKey = "RNPush"
 func RNPushLog(_ format: String, _ args: CVarArg...) {
     #if DEBUG
@@ -29,11 +28,11 @@ public class RNPushManager: NSObject {
     static let kRollBackSuffixKey = "_rollback"
     static let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
     static let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-    
+
     struct RNPushManagerStatus {
-        static let success = 0
-        static let pending = 1
-        static let fail = 2
+        static let pending: Int64 = 0
+        static let success: Int64 = 1
+        static let fail: Int64 = 2
     }
     
 }
@@ -46,9 +45,11 @@ public extension RNPushManager {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         userDefaults.set(bundleResource, forKey: kBundleResourceKey)
         
+        RNPushManagerMonitor.default.registerNotification()
         rollbackIfNeeded { (_) in
             preloadBridge()
         }
+        
     }
     
     /// 模块所在的位置
@@ -77,40 +78,29 @@ public extension RNPushManager {
         return bundleURL(for: module)?.appendingPathComponent(module == "" ? "main.js" : "index.js")
     }
     
-    class public func success(for module: String) {
-        RNPushManager.removeRollbackIfNeeded(for: module)
+    // 更改本地存储的当前模块状态
+    class func updateStatus(for module: String, buildHash: String, status: Int64, shouldPostNotification: Bool = true) {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        var statusDic = userDefaults.dictionary(forKey: kModuleStatusKey) as? [String: Int] ?? [:]
-        statusDic[module] = RNPushManagerStatus.success
-        userDefaults.set(statusDic, forKey: kModuleStatusKey)
-    }
-    
-    class public func pending(for module: String) {
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        var statusDic = userDefaults.dictionary(forKey: kModuleStatusKey) as? [String: Int] ?? [:]
-        statusDic[module] = RNPushManagerStatus.pending
-        userDefaults.set(statusDic, forKey: kModuleStatusKey)
-    }
-    
-    class public func fail(for module: String) {
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        var statusDic = userDefaults.dictionary(forKey: kModuleStatusKey) as? [String: Int] ?? [:]
-        statusDic[module] = RNPushManagerStatus.fail
-        userDefaults.set(statusDic, forKey: kModuleStatusKey)
-    }
-    
-    // 修改已经更新模块的buildHash
-    class func updateBuildHash(for module: String, buildHash: String) {
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        var buildHashDic = userDefaults.dictionary(forKey: kModuleUpdatedBuildhashKey) as? [String: String] ?? [:]
-        buildHashDic[module] = buildHash
-        userDefaults.set(buildHashDic, forKey: kModuleUpdatedBuildhashKey)
-    }
-    
-    class func updatedBuildHash(for module: String) -> String {
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        var buildHashDic = userDefaults.dictionary(forKey: kModuleUpdatedBuildhashKey) as? [String: String] ?? [:]
-        return buildHashDic[module] ?? ""
+        var statusDic = userDefaults.dictionary(forKey: kModuleStatusKey) as? [String: [String : Any]] ?? [:]
+        
+        let condition0 = (status == RNPushManagerStatus.pending)
+        var condition1 = false
+        if status != RNPushManagerStatus.pending, let savedStatus = statusDic[buildHash]?["status"] as? Int64, let savedModule = statusDic[buildHash]?["module"] as? String, savedStatus == RNPushManagerStatus.pending, savedModule == module {
+            condition1 = true
+        }
+        if condition0 || condition1 {
+            if shouldPostNotification {
+                let userInfo: [String: Any] = [
+                    "module": module,
+                    "status": status,
+                    "buildHash": buildHash
+                ]
+                NotificationCenter.default.post(name: Notification.Name(kModuleStatusKey), object: nil, userInfo: userInfo)
+            } else {
+                statusDic[buildHash] = ["status": status, "module": module]
+                userDefaults.set(statusDic, forKey: kModuleStatusKey)
+            }
+        }
     }
 }
 
@@ -165,7 +155,7 @@ extension RNPushManager {
         userDefaults.set(rollbackModules, forKey: kRollbackKey)
     }
     
-    // 将某个模块移除回滚队列
+    // 将某个模块移除待回滚队列
     class public func removeRollbackIfNeeded(for module: String) {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         var rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
@@ -173,7 +163,7 @@ extension RNPushManager {
             rollbackModules.remove(at: index)
             
             // 移除则意味着加载成功
-            success(for: module)
+            updateStatus(for: module, buildHash: RNPushManager.buildHash(for: module), status: RNPushManagerStatus.success)
         }
         userDefaults.set(rollbackModules, forKey: kRollbackKey)
     }
@@ -194,8 +184,8 @@ extension RNPushManager {
                 
                 for module in rollbackModules {
                     // 需要回滚则意味着失败
-                    fail(for: module)
-                    
+                    updateStatus(for: module, buildHash: RNPushManager.buildHash(for: module), status: RNPushManagerStatus.fail)
+
                     try rollback(for: module, recordAsBug: true)
                     removeRollbackIfNeeded(for: module)
                 }
@@ -213,7 +203,7 @@ extension RNPushManager {
     // 回滚指定模块
     class func rollback(for module: String, recordAsBug: Bool = false) throws {
         if recordAsBug { // 记录当前回滚模块的buildHash，下次如果是此buildHash则不要更新此版本
-            let buildHash = RNPushManager.updatedBuildHash(for: module)
+            let buildHash = RNPushManager.buildHash(for: module)
             let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
             var rollbackBugBuildhashs = userDefaults.array(forKey: kRollbackBugBuildhashKey) as? [String] ?? []
             if !rollbackBugBuildhashs.contains(buildHash) {
@@ -388,5 +378,58 @@ extension RNPushManager {
             }
         }
     }
+}
+
+/// MARK: manifest配置文件
+extension RNPushManager {
     
+    // 检测路由是否有效
+    class func validate(module: String = "", route: String) -> Bool {
+        guard let model = RNManifestModel.model(for: module) else { return false }
+        return model.routes.contains(route)
+    }
+    
+    // 获取buildHash
+    class func buildHash(for module: String = "") -> String {
+        return RNManifestModel.model(for: module)?.buildHash ?? ""
+    }
+    
+    class func buildHash(from url: URL) -> String {
+        return RNManifestModel.model(from: url)?.buildHash ?? ""
+    }
+    
+    // 获取所依赖的模块
+    class func dependency(for module: String = "") -> [String] {
+        return RNManifestModel.model(for: module)?.dependency ?? []
+    }
+    
+    // 获取manifest.json URL
+    class fileprivate func manifestBundleURL(for module: String = "") -> URL? {
+        return RNPushManager.bundleURL(for: module)?.appendingPathComponent("manifest.json")
+    }
+    
+    /// 配置文件
+    fileprivate class RNManifestModel: NSObject {
+        var appVersion: String = ""        // 当前发布的版本号
+        var minAppVersion: String = ""     // 最小可使用的应用版本
+        var buildHash: String = ""         // 模块构建后的hash值
+        var routes: [String] = []          // 模块路由，用于检测路由是否可跳转
+        var dependency: [String] = []      // 当前模块所依赖的其他模块
+        
+        static func model(for module: String) -> RNManifestModel? {
+            guard let url = RNPushManager.manifestBundleURL(for: module) else { return nil }
+            return RNManifestModel.model(from: url)
+        }
+        
+        static func model(from url: URL) -> RNManifestModel? {
+            guard let data = try? Data(contentsOf: url), let json = (try? JSONSerialization.jsonObject(with: data, options: .allowFragments)) as? [String: Any] else { return nil }
+            let model = RNManifestModel()
+            model.appVersion = json["appVersion"] as? String ?? ""
+            model.minAppVersion = json["minAppVersion"] as? String ?? ""
+            model.buildHash = json["buildHash"] as? String ?? ""
+            model.routes = json["routes"] as? [String] ?? []
+            model.dependency = json["dependency"] as? [String] ?? []
+            return model
+        }
+    }
 }

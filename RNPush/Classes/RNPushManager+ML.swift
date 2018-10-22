@@ -14,12 +14,9 @@ public extension RNPushManager {
     
     /// MARK: 检查文件是否需要下载，注意每次调用下载某个某个模块之前一定要检查所依赖的模块是否已经被下载，如果未被下载则需下载
     class public func ml_updateIfNeeded(_ module: String, _ completion: ((_ shouldReload: Bool) -> Void)? = nil) {
-        // 用于监听模块当前各种更新状态
-        RNPushManagerMonitor.default.registerUserdefaultDidChanged()
-        
         // 这里的modules 应当包含依赖的相关模块
         var modules: [String] = []
-        modules.append(contentsOf: MLManifestModel.model(for: module)?.dependency ?? [])
+        modules.append(contentsOf: RNPushManager.dependency(for: module))
         modules.append(module)
         RNPushManager.ml_checks(modules) { (checkSuccess, needReload) in
             DispatchQueue.main.async {
@@ -65,7 +62,7 @@ extension RNPushManager {
         
         // 如果当前的下载的版本存在线上bug则不能merge
         let url = URL(fileURLWithPath: RNPushManager.unpatchedTmpPath(for: module)).appendingPathComponent("manifest.json")
-        let buildHash = RNPushManager.ml_buildHash(from: url)
+        let buildHash = RNPushManager.buildHash(from: url)
         guard !RNPushManager.isBugBuildHash(for: buildHash) else {
             RNPushManager.ml_clearInvalidate(module)
             completion?(true)
@@ -77,8 +74,7 @@ extension RNPushManager {
             RNPushManager.merge(unpatchedTmpPath, unpatchedPath, [], { (error) in
                 let _mergeSuccess = error == nil
                 if _mergeSuccess { // 合并成功清除不必要的文件
-                    RNPushManager.updateBuildHash(for: module, buildHash: ml_buildHash(for: module))
-//                    RNPushManager.ml_clearInvalidate(module)
+                    RNPushManager.ml_clearInvalidate(module)
                 } else { // 否则则需要回滚该模块
                     try? RNPushManager.rollback(for: module)
                 }
@@ -124,7 +120,11 @@ extension RNPushManager {
     
     class fileprivate func ml_check(_ module: String, _ completion: @escaping ((_ checkSuccess: Bool, _ shouldReload: Bool) -> Void)) {
         let config = RNPushConfig(module)
-        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.check), config.ml_params(), "POST") { (data, response, error) in
+        var params = config.ml_params()
+        let buildHash = RNPushManager.buildHash(for: module)
+        RNPushLog("RNPushManager  ml_check   module: \(module)  buildHash_pre:  \(buildHash)")
+        params["buildHash"] = config.ml_encode(string: buildHash)
+        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.check), params, "POST") { (data, response, error) in
             if let err = error {
                 RNPushLog("RNPushManager ml_check error: \(module)  \(String(describing: err))")
                 completion(false, false)
@@ -138,7 +138,7 @@ extension RNPushManager {
                         } else {
                             let model = MLCheckModel.model(from: jsonData)
                             if model.shouldUpdate {
-                                RNPushManager.pending(for: module)
+                                RNPushManager.updateStatus(for: module, buildHash: model.buildHash, status: RNPushManagerStatus.pending)
                                 // 下载
                                 RNPushManager.download(urlPath: model.url, save: RNPushManager.patchPath(for: module), progress: nil, completion: { (path, downloadError) in
                                     if downloadError != nil {
@@ -179,25 +179,38 @@ extension RNPushManager {
         }
     }
     
-    class fileprivate func ml_success(_ module: String) {
-        RNPushLog("RNPushManager ml_success : \(module)")
+    class fileprivate func ml_success(_ module: String, _ buildHash: String, _ complection:((_ success: Bool) -> Void)? = nil) {
+        RNPushLog("RNPushManager  ml_success   module: \(module)  buildHash_pre:  \(buildHash)")
         let config = RNPushConfig(module)
-        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.success), config.ml_params(), "POST", nil)
+        var params = config.ml_params()
+        params["buildHash"] = config.ml_encode(string: buildHash)
+        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.success), params, "POST") { (data, response, error) in
+            complection?(error == nil)
+        }
     }
     
-    class fileprivate func ml_pending(_ module: String) {
-        RNPushLog("RNPushManager ml_pending : \(module)")
+    class fileprivate func ml_pending(_ module: String, _ buildHash: String, _ complection:((_ success: Bool) -> Void)? = nil) {
+        RNPushLog("RNPushManager  ml_pending   module: \(module)  buildHash_pre:  \(buildHash)")
         let config = RNPushConfig(module)
-        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.pending), config.ml_params(), "POST", nil)
+        var params = config.ml_params()
+        params["buildHash"] = config.ml_encode(string: buildHash)
+        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.pending), params, "POST") { (data, response, error) in
+            complection?(error == nil)
+        }
     }
     
-    class fileprivate func ml_fail(_ module: String) {
-        RNPushLog("RNPushManager ml_fail : \(module)")
+    class fileprivate func ml_fail(_ module: String, _ buildHash: String, _ complection:((_ success: Bool) -> Void)? = nil) {
+        RNPushLog("RNPushManager  ml_fail   module: \(module)  buildHash_pre:  \(buildHash)")
         let config = RNPushConfig(module)
-        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.fail), config.ml_params(), "POST", nil)
+        var params = config.ml_params()
+        params["buildHash"] = config.ml_encode(string: buildHash)
+        RNPushManager.request(config.serverUrl.appending(MLRNPushManagerApi.fail), params, "POST") { (data, response, error) in
+            complection?(error == nil)
+        }
     }
     
     class public func ml_bind(_ userInfo: [String: Any]) {
+        RNPushLog("RNPushManager  ml_bind : \(userInfo)")
         let config = RNPushConfig()
         var params: [String: Any] = config.ml_params()
         if let jsonData = try? JSONSerialization.data(withJSONObject: userInfo, options: .prettyPrinted), let jsonString = String(data: jsonData, encoding: .utf8) {
@@ -243,87 +256,48 @@ extension RNPushManager {
     }
 }
 
-/// MARK: 读取manifest配置文件
-extension RNPushManager {
-    
-    // 检测路由是否有效
-    class public func ml_validate(module: String = "", route: String) -> Bool {
-        guard let model = MLManifestModel.model(for: module) else { return false }
-        return model.routes.contains(route)
-    }
-    
-    // 获取buildHash
-    class func ml_buildHash(for module: String = "") -> String {
-        return MLManifestModel.model(for: module)?.buildHash ?? ""
-    }
-    
-    class func ml_buildHash(from url: URL) -> String {
-        return MLManifestModel.model(from: url)?.buildHash ?? ""
-    }
-    
-    // 获取manifest.json URL
-    class fileprivate func ml_manifestBundleURL(for module: String = "") -> URL? {
-        return RNPushManager.bundleURL(for: module)?.appendingPathComponent("manifest.json")
-    }
-    
-    /// 配置文件
-    fileprivate class MLManifestModel: NSObject {
-        var appVersion: String = ""        // 当前发布的版本号
-        var minAppVersion: String = ""     // 最小可使用的应用版本
-        var buildHash: String = ""         // 模块构建后的hash值
-        var routes: [String] = []          // 模块路由，用于检测路由是否可跳转
-        var dependency: [String] = []      // 当前模块所依赖的其他模块
-        
-        static func model(for module: String) -> MLManifestModel? {
-            guard let url = RNPushManager.ml_manifestBundleURL(for: module) else { return nil }
-            return MLManifestModel.model(from: url)
-        }
-        
-        static func model(from url: URL) -> MLManifestModel? {
-            guard let data = try? Data(contentsOf: url), let json = (try? JSONSerialization.jsonObject(with: data, options: .allowFragments)) as? [String: Any] else { return nil }
-            let model = MLManifestModel()
-            model.appVersion = json["appVersion"] as? String ?? ""
-            model.minAppVersion = json["minAppVersion"] as? String ?? ""
-            model.buildHash = json["buildHash"] as? String ?? ""
-            model.routes = json["routes"] as? [String] ?? []
-            model.dependency = json["dependency"] as? [String] ?? []
-            return model
-        }
-    }
-}
-
 /// MARK: 配置一个监听器，处理: 1、模块因状态改变需要进行网络的访问  2、用户登录状态发生改变
-fileprivate class RNPushManagerMonitor: NSObject {
+class RNPushManagerMonitor: NSObject {
     
     static let `default` = RNPushManagerMonitor()
     
     lazy var monitoring: Bool = false
-    
+
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
 
-    func registerUserdefaultDidChanged() {
+    func registerNotification() {
         guard monitoring == false else { return }
         monitoring = true
-        NotificationCenter.default.addObserver(self, selector: #selector(didChangeNotification(_:)), name: UserDefaults.didChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didChangeNotification(_:)), name: NSNotification.Name(RNPushManager.kModuleStatusKey), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(loginStatusChanged(_:)), name: NSNotification.Name("newUserLogin"), object: nil)
     }
     
     @objc func didChangeNotification(_ notification: Notification) {
         DispatchQueue(label: "com.RNPushManager.monitor").async {
-            guard let userDefaults = notification.object as? UserDefaults, let statusDic = userDefaults.dictionary(forKey: RNPushManager.kModuleStatusKey) as? [String: Int] else { return }
-            for (module, status) in statusDic {
+            if let userInfo = notification.userInfo, let module = userInfo["module"] as? String, let buildHash = userInfo["buildHash"] as? String, let status = userInfo["status"] as? Int64 {
                 switch status {
-                case RNPushManager.RNPushManagerStatus.success:
-                    RNPushManager.ml_success(module)
                 case RNPushManager.RNPushManagerStatus.pending:
-                    RNPushManager.ml_pending(module)
+                    RNPushManager.ml_pending(module, buildHash, { (success) in
+                        if success {
+                            RNPushManager.updateStatus(for: module, buildHash: buildHash, status: RNPushManager.RNPushManagerStatus.pending, shouldPostNotification: false)
+                        }
+                    })
+                case RNPushManager.RNPushManagerStatus.success:
+                    RNPushManager.ml_success(module, buildHash, { (success) in
+                        if success {
+                            RNPushManager.updateStatus(for: module, buildHash: buildHash, status: RNPushManager.RNPushManagerStatus.success, shouldPostNotification: false)
+                        }
+                    })
                 default:
-                    RNPushManager.ml_fail(module)
+                    RNPushManager.ml_fail(module, buildHash, { (success) in
+                        if success {
+                            RNPushManager.updateStatus(for: module, buildHash: buildHash, status: RNPushManager.RNPushManagerStatus.fail, shouldPostNotification: false)
+                        }
+                    })
                 }
             }
-            userDefaults.set(nil, forKey: RNPushManager.kModuleStatusKey)
         }
     }
     
