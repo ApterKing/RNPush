@@ -10,57 +10,41 @@ import Foundation
 /// MARK: 预加载
 public extension RNPushManager {
     
-    // 获取已经准备好的bridge
-    class public func preloadedBridge(for module: String = "Base", potentialPreload: Bool = true) -> RCTBridge? {
-        var pool = bridgePool
-        var bridge = pool.removeValue(forKey: module)
-        if bridge == nil {
-            bridge = RNPushManager.bridge(for: module)
-        }
-        if potentialPreload {  // 为下次可能需要使用到该模块预加载一个bridge
-            let potentialBridge = RNPushManager.bridge(for: module)
-            pool[module] = potentialBridge
-        }
-        bridgePool = pool
-        return bridge
-    }
+    static fileprivate var kPreloadedBridgeKey = "kPreloadedBridgeKey"
     
-    class func preloadBridge(module: String = "Base") {
-        // 预加载前获取当前池中如果存在bridge，则需要invalidate
-        for (_, bridge) in bridgePool {
-            bridge.invalidate()
+    class public var preloadedBridge: RCTBridge? {
+        get {
+            return objc_getAssociatedObject(self, &kPreloadedBridgeKey) as? RCTBridge
         }
-        bridgePool.removeAll()
-        
-        var pool : [String: RCTBridge] = [:]
-        let bridge = RCTBridge(delegate: RNPushRCTBridgeDelegate(module), launchOptions: nil)
-        pool["Base"] = bridge
-        bridgePool = pool
+        set {
+            objc_setAssociatedObject(self, &kPreloadedBridgeKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
     }
     
     // 创建一个新的bridge
-    class func bridge(for module: String) -> RCTBridge? {
-        return RCTBridge(delegate: RNPushRCTBridgeDelegate(module), launchOptions: nil)
+    class public func bridge(for module: String, extras: [String]? = nil) -> RCTBridge? {
+        return RCTBridge(delegate: RNPushRCTBridgeDelegate(module, extras), launchOptions: nil)
     }
     
-    static fileprivate var kBridgePoolKey = "kBridgePoolKey"
-    static fileprivate var bridgePool: [String: RCTBridge] {
-        get {
-            let pool = objc_getAssociatedObject(self, &kBridgePoolKey) as? [String: RCTBridge]
-            return pool ?? [:]
-        }
-        set {
-            objc_setAssociatedObject(self, &kBridgePoolKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        }
+    class public func preloadBridge(module: String = "Base") {
+//        var extras: [String] = []
+//        if let preloadedModules = preloadedBridge?.modules {
+//            modules.append(contentsOf: preloadedModules)
+//        }
+        preloadedBridge?.invalidate()
+        preloadedBridge = nil
+        preloadedBridge = bridge(for: module, extras: nil)
     }
+    
 }
 
 fileprivate class RNPushRCTBridgeDelegate: NSObject, RCTBridgeDelegate {
     
     var module = ""
-
-    init(_ module: String) {
+    var extras: [String]? = nil
+    init(_ module: String, _ extras: [String]? = nil) {
         self.module = module
+        self.extras = extras
     }
 
     func sourceURL(for bridge: RCTBridge!) -> URL! {
@@ -75,18 +59,19 @@ fileprivate class RNPushRCTBridgeDelegate: NSObject, RCTBridgeDelegate {
         return true
     }
     
-    /// MARK: 自定义加载方式 ，当bridge.reload()时无需重新添加其他module
     func loadSource(for bridge: RCTBridge!, with loadCallback: RCTSourceLoadBlock!) {
         var modules: [String] = []
         var bundleURLs: [URL] = []
-        for module in bridge.modules {
-            if let url = RNPushManager.bridgeBundleURL(for: module) {
-                modules.append(module)
-                bundleURLs.append(url)
+        if extras != nil {
+            for module in extras! {
+                if let url = RNPushManager.bridgeBundleURL(for: module) {
+                    modules.append(module)
+                    bundleURLs.append(url)
+                }
             }
         }
         bridge.loadSource(with: modules, at: bundleURLs, onSourceLoad: loadCallback)
     }
-
+    
 }
 

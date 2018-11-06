@@ -44,11 +44,11 @@ class RNRootViewController: MLViewController, UIGestureRecognizerDelegate ,MLSta
         #if DEBUG
         RNPushManager.register(serverUrl: "http://pm.qa.medlinker.com/api",
                                deploymentKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibWVkLXJuLWlvcyIsImVudiI6ImRldmVsb3BtZW50IiwiaWF0IjoxNTMwNjk3MzAyfQ.43XEuT6zm8l9OSiwGoPzDYNl6ULHzBgwCs5U9yNo6r0",
-                               bundleResource: "RNResources")
+                               bundleResource: "main.jsbundle")
         #else
         RNPushManager.register(serverUrl: "https://pm.medlinker.com/api",
                                deploymentKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibWVkLXJuLWlvcyIsImVudiI6InByb2R1Y3Rpb24iLCJpYXQiOjE1MzA2OTczMDJ9.JTtq93c1a-ysiS_kUCZhuvgtRK0_rVJkIvn_968LJPI",
-                               bundleResource: "RNResources")
+                               bundleResource: "main.jsbundle")
         #endif
     }
     
@@ -76,9 +76,11 @@ class RNRootViewController: MLViewController, UIGestureRecognizerDelegate ,MLSta
         detectedView?.contentViewInvalidated()
         detectedView = nil
         
-        bridge?.invalidate()
-        rootView?.contentViewInvalidated()
+//        bridge?.invalidate()
+//        rootView?.contentViewInvalidated()
         rootView = nil
+//        bridge = nil
+//        RNPushManager.preloadBridge()
     }
     
     override func loadView() {
@@ -101,22 +103,18 @@ class RNRootViewController: MLViewController, UIGestureRecognizerDelegate ,MLSta
         
         RNPushLog("RNPushManager ------- openRootView   ----- end  --  1")
         
-        //        #if !DEBUG
-        RNPushManager.ml_updateIfNeeded(moduleName) { [weak self] (shouldReload) in
-            if shouldReload, let weakSelf = self {
-                // 这里需要检测一下Base包是否存在错误
-                RNPushManager.preloadBridge(module: "Base")
-                
-                weakSelf.detectedBridge = RNPushManager.preloadedBridge(for: "Base", potentialPreload: false)
+        RNPushManager.ml_updateIfNeeded(moduleName) { [weak self] (shouldReloads) in
+            guard let baseShouldReload = shouldReloads?.contains("Base"), let weakSelf = self else { return }
+            
+            // 这里需要检测一下Base包是否存在错误
+            if baseShouldReload {
+                weakSelf.detectedBridge = RNPushManager.bridge(for: "Base")
                 weakSelf.detectedView = RCTRootView(bridge: weakSelf.detectedBridge!, moduleName: "Base", initialProperties: nil)
                 RNPushManager.addRollbackIfNeeded(for: "Base")
                 weakSelf.view.insertReactSubview(weakSelf.detectedView, at: 0)
-                
-                RNPushManager.preloadBridge(module: "Base")
                 RNPushLog("RNPushManager ------- openRootView   ----- detected")
             }
         }
-        //        #endif
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -130,7 +128,7 @@ class RNRootViewController: MLViewController, UIGestureRecognizerDelegate ,MLSta
     
     @objc open func openRootView() {
         RNPushLog("RNPushManager ------- openRootView   ----- start")
-        bridge = RNPushManager.preloadedBridge(for: "Base", potentialPreload: true)
+        bridge = RNPushManager.preloadedBridge
         guard let url = RNPushManager.bridgeBundleURL(for: moduleName) else { return }
         bridge?.enqueueApplicationModule(moduleName, at: url, onSourceLoad: { [weak self] (error, source) in
             guard let weakSelf = self, error == nil else { return }

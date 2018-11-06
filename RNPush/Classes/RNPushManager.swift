@@ -7,7 +7,7 @@
 
 import Foundation
 import SSZipArchive
-
+import WebKit
 
 /// MARK: global
 let kSuitNameKey = "RNPush"
@@ -17,6 +17,26 @@ func RNPushLog(_ format: String, _ args: CVarArg...) {
     #endif
 }
 
+
+/**
+ *
+ * 应用包模块结构
+ * [main.jsbundle] -- 可配置
+ * --- assets
+ * --- [moduleA].js,[moduleB].js,...
+ * --- [moduleA].js.meta,[moduleB].js.meta,...
+ * --- [moduleA].manifest.json,[moduleB].manifest.json,...
+ *
+ * 升级单个模块适用目录结构为：
+ * [module]
+ * --- assets
+ * --- [module].js
+ * --- [module].js.meta
+ * --- [module].manifest.json
+ *
+ * Updated by wangcong on 2018/10/31，修改为单Bridge
+ *
+ */
 public class RNPushManager: NSObject {
     
     static let kBundleResourceKey = "com.RNPush.kBundleResourceKey"
@@ -24,8 +44,10 @@ public class RNPushManager: NSObject {
     static let kRollbackBugBuildhashKey = "com.RNPush.kRollbackBugBuildhashKey"
     static let kModuleUpdatedBuildhashKey = "com.RNPuhs.kUpdatedBuildhashKey"
     static let kModuleStatusKey = "com.RNPush.kModuleStatusKey"
-    static let kPatchSuffixKey = ".zip"
-    static let kRollBackSuffixKey = "_rollback"
+    static let kPatchSuffixKey = ".patch"
+    static let kRollBackPrefixKey = "rollback_"
+    
+    static let bundleName = Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "RNPush"
     static let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
     static let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
 
@@ -40,7 +62,7 @@ public class RNPushManager: NSObject {
 public extension RNPushManager {
     
     /// 注册相关配置，此方法在willFinishLaunchingWithOptions/didFinishLaunchingWithOptions中需要调用
-    class public func register(serverUrl: String, deploymentKey: String, bundleResource: String? = nil) {
+    class public func register(serverUrl: String, deploymentKey: String, bundleResource: String = "main.jsbundle") {
         RNPushConfig.register(serverUrl: serverUrl, deploymentKey: deploymentKey)
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         userDefaults.set(bundleResource, forKey: kBundleResourceKey)
@@ -49,37 +71,40 @@ public extension RNPushManager {
         rollbackIfNeeded { (_) in
             preloadBridge()
         }
-        
     }
     
-    /// 模块所在的位置
-    class public func bundleURL(for module: String = "") -> URL? {
-        let url: URL?
-        let bundlePath = RNPushManager.unpatchedPath(for: module)
-        if FileManager.default.fileExists(atPath: bundlePath) {
-            // 从sanbox中获取bundleURL
-            url = URL(fileURLWithPath: bundlePath)
-        } else {
-            // 从应用包中获取bundleURL
-            url = binaryBundleURL(for: module)
+    class public func bundleURL() -> URL? {
+        var url: URL? = sanboxBundleURL()
+        if url == nil {
+            url = binaryBundleURL()
         }
-        RNPushLog("RNPushManager -----  bundleURL : \(url?.path ?? "")")
+        
+        RNPushLog("RNPushManager  bundlePath:   \(String(describing: url?.absoluteString))")
         return url
     }
     
-    class public func binaryBundleURL(for module: String = "") -> URL? {
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main.jsbundle"
-        let bundleURL = Bundle.main.url(forResource: bundleResource, withExtension: nil)
-        return module == "" ? bundleURL : bundleURL?.appendingPathComponent(module)
+    class public func bridgeBundleURL(for module: String) -> URL? {
+        return bundleURL()?.appendingPathComponent("\(module).js")
     }
     
-    class public func bridgeBundleURL(for module: String = "") -> URL? {
-        return bundleURL(for: module)?.appendingPathComponent(module == "" ? "main.js" : "index.js")
+    // 沙盒
+    class func sanboxBundleURL() -> URL? {
+        let bundlePath = sanboxBundlePath()
+        if FileManager.default.fileExists(atPath: bundlePath) {
+            return URL(fileURLWithPath: bundlePath)
+        }
+        return nil
+    }
+    
+    // 应用包
+    class func binaryBundleURL() -> URL? {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main.jsbundle"
+        return Bundle.main.url(forResource: bundleResource, withExtension: nil)
     }
     
     // 更改本地存储的当前模块状态
-    class func updateStatus(for module: String, buildHash: String, status: Int64, shouldPostNotification: Bool = true) {
+    class func markStatus(for module: String, buildHash: String, status: Int64, shouldPostNotification: Bool = true) {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         var statusDic = userDefaults.dictionary(forKey: kModuleStatusKey) as? [String: [String : Any]] ?? [:]
         
@@ -104,44 +129,6 @@ public extension RNPushManager {
     }
 }
 
-/// MARK: 网络相关
-extension RNPushManager {
-    
-    class public func request(_ urlString: String, _ params: [String: Any]? = nil, _ httpMethod: String?, _ completion: ((Data?, URLResponse?, Error?) -> Void)?) {
-        
-        guard let url = URL(string: urlString) else { return }
-        
-        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
-        request.httpMethod = httpMethod
-        var httpBody = ""
-        if let bodies = params {
-            httpBody = bodies.reduce("") { (result, param) -> String in
-                return "\(result)\(result == "" ? "" : "&")\(param.key)=\(param.value)"
-            }
-            request.httpBody = httpBody.data(using: .utf8)
-        }
-        RNPushLog("RNPushManager  request--request: \(urlString)     --   params : \(httpBody)")
-        
-        let config = URLSessionConfiguration.default
-        let session = URLSession(configuration: config)
-        let task = session.dataTask(with: request) { (data, response, error) in
-            RNPushLog("RNPushManager  request--response:  \(response?.url?.path ?? "")   \(String(describing: data == nil ? "" : String(data: data!, encoding: String.Encoding.utf8)))  \n error: \(String(describing: error))")
-            completion?(data, response, error)
-        }
-        task.resume()
-    }
-    
-    class public func download(urlPath: String, save filePath: String?, progress: ((_ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?, completion: ((_ path: String, _ error: Error?) -> Void)?) {
-        var savePath = filePath
-        if savePath == nil {
-            savePath = RNPushManager.patchPath()
-        }
-        
-        RNPushDownloader.download(urlPath: urlPath, save: savePath!, progress: progress, completion: completion)
-    }
-    
-}
-
 /// MARK: 回滚
 extension RNPushManager {
     
@@ -155,15 +142,17 @@ extension RNPushManager {
         userDefaults.set(rollbackModules, forKey: kRollbackKey)
     }
     
-    // 将某个模块移除待回滚队列
-    class public func removeRollbackIfNeeded(for module: String) {
+    // 将某个模块移除待回滚队列，并且是否标定为热更成功模块
+    class public func removeRollbackIfNeeded(for module: String, shouldMarked success: Bool = true) {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         var rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
         if let index = rollbackModules.index(of: module) {
             rollbackModules.remove(at: index)
             
-            // 移除则意味着加载成功
-            updateStatus(for: module, buildHash: RNPushManager.buildHash(for: module), status: RNPushManagerStatus.success)
+            // 移除则意味着此次获取的热更版本成功
+            if success {
+                markStatus(for: module, buildHash: RNPushManager.buildHash(for: module), status: RNPushManagerStatus.success)
+            }
         }
         userDefaults.set(rollbackModules, forKey: kRollbackKey)
     }
@@ -181,13 +170,23 @@ extension RNPushManager {
             do {
                 let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
                 let rollbackModules = userDefaults.array(forKey: kRollbackKey) as? [String] ?? []
+                var rollbackBugBuildhashs = userDefaults.array(forKey: kRollbackBugBuildhashKey) as? [String] ?? []
                 
                 for module in rollbackModules {
-                    // 需要回滚则意味着失败
-                    updateStatus(for: module, buildHash: RNPushManager.buildHash(for: module), status: RNPushManagerStatus.fail)
-
-                    try rollback(for: module, recordAsBug: true)
-                    removeRollbackIfNeeded(for: module)
+                    let buildHash = RNPushManager.buildHash(for: module)
+                    // 标定位bug
+                    if !rollbackBugBuildhashs.contains(buildHash) {
+                        rollbackBugBuildhashs.append(buildHash)
+                    }
+                    removeRollbackIfNeeded(for: module, shouldMarked: false)
+                    
+                    markStatus(for: module, buildHash: RNPushManager.buildHash(for: module), status: RNPushManagerStatus.fail)
+                }
+                userDefaults.set(rollbackBugBuildhashs, forKey: kRollbackBugBuildhashKey)
+                
+                // 存在需要回滚的模块则回滚
+                if rollbackModules.count != 0 {
+                    try RNPushManager.rollback()
                 }
                 DispatchQueue.main.async {
                     completion?(nil)
@@ -200,34 +199,13 @@ extension RNPushManager {
         }
     }
     
-    // 回滚指定模块
-    class func rollback(for module: String, recordAsBug: Bool = false) throws {
-        if recordAsBug { // 记录当前回滚模块的buildHash，下次如果是此buildHash则不要更新此版本
-            let buildHash = RNPushManager.buildHash(for: module)
-            let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-            var rollbackBugBuildhashs = userDefaults.array(forKey: kRollbackBugBuildhashKey) as? [String] ?? []
-            if !rollbackBugBuildhashs.contains(buildHash) {
-                rollbackBugBuildhashs.append(buildHash)
-            }
-            userDefaults.set(rollbackBugBuildhashs, forKey: kRollbackBugBuildhashKey)
-        }
-
-        // 删除patch文件
-        let patchPath = RNPushManager.patchPath(for: module)
-        if FileManager.default.fileExists(atPath: patchPath) {
-            try FileManager.default.removeItem(atPath: patchPath)
-        }
+    class func rollback() throws {
+        let bundlePath = RNPushManager.sanboxBundlePath()
+        let rollbackPath = RNPushManager.sanboxRollbackPath()
         
-        // 删除unpatched文件
-        let unpatchedPath = RNPushManager.unpatchedPath(for: module)
-        if FileManager.default.fileExists(atPath: unpatchedPath) {
-            try FileManager.default.removeItem(atPath: unpatchedPath)
-        }
-        
-        // 检测是否存在rollback的备份文件
-        let rollbackPath = RNPushManager.rollbackPath(for: module)
+        try FileManager.default.removeItem(atPath: bundlePath)
         if FileManager.default.fileExists(atPath: rollbackPath) {
-            try FileManager.default.moveItem(atPath: rollbackPath, toPath: unpatchedPath)
+            try FileManager.default.moveItem(atPath: rollbackPath, toPath: bundlePath)
         }
     }
 
@@ -239,8 +217,7 @@ extension RNPushManager {
     // 热更文件存储所在的文件夹
     class func sanboxPath(_ pathComponent: String = "", isDirectory: Bool = true) -> String {
         let supportPath = NSSearchPathForDirectoriesInDomains(.applicationSupportDirectory, .userDomainMask, true).first ?? ""
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        var sanboxPath = "\(supportPath)/\(userDefaults.string(forKey: RNPushManager.kBundleResourceKey) ?? "RNPush")_\(RNPushManager.appVersion)_\(RNPushManager.buildVersion)"
+        var sanboxPath = "\(supportPath)/\(RNPushManager.bundleName)_\(RNPushManager.appVersion)_\(RNPushManager.buildVersion)"
         if !FileManager.default.fileExists(atPath: sanboxPath, isDirectory: nil) {
             try? FileManager.default.createDirectory(atPath: sanboxPath, withIntermediateDirectories: true, attributes: nil)
         }
@@ -254,30 +231,26 @@ extension RNPushManager {
         return sanboxPath
     }
     
-    // 更新文件地址
-    class func patchPath(for module: String = "") -> String {
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main.jsbundle"
-        return sanboxPath() + "/" + (module == "" ? bundleResource : module) + (bundleResource.hasSuffix(".jsbundle") ? "" : kPatchSuffixKey)
+    // 更新压缩文件存储地址
+    class func sanboxPatchPath(for module: String) -> String {
+        return sanboxPath() + "/" + module + kPatchSuffixKey
     }
     
     // 更新文件解压地址
-    class func unpatchedPath(for module: String = "") -> String {
-        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
-        let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main"
-        return sanboxPath() + "/" + (module == "" ? bundleResource : module)
+    class func sanboxUnpatchedPath(for module: String) -> String {
+        return sanboxPath() + "/" + module
     }
     
-    // 更新文件解压地址临时存储地址
-    class func unpatchedTmpPath(for module: String = "") -> String {
-        return unpatchedPath(for: module) + "_tmp"
-    }
-    
-    // 回滚文件地址
-    class func rollbackPath(for module: String = "") -> String {
+    class func sanboxBundlePath() -> String {
         let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
         let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main"
-        return sanboxPath() + "/" + (module == "" ? bundleResource : module) + kRollBackSuffixKey
+        return sanboxPath() + "/" + bundleResource
+    }
+    
+    class func sanboxRollbackPath() -> String {
+        let userDefaults = UserDefaults(suiteName: kSuitNameKey) ?? UserDefaults.standard
+        let bundleResource = userDefaults.string(forKey: kBundleResourceKey) ?? "main"
+        return sanboxPath() + "/" + kRollBackPrefixKey + bundleResource
     }
     
     // 解压
@@ -306,10 +279,10 @@ extension RNPushManager {
     }
     
     // 拷贝文件
-    class func copy(_ sourcePath: String, _ destPath: String, _ shouldDeleteDest: Bool = false, _ complection: ((_ error: Error?) -> Void)? = nil) {
+    class func copy(_ sourcePath: String, _ destPath: String, _ complection: ((_ error: Error?) -> Void)? = nil) {
         DispatchQueue(label: "com.RNPush.copy").async {
             do {
-                if shouldDeleteDest && FileManager.default.fileExists(atPath: destPath) {
+                if FileManager.default.fileExists(atPath: destPath) {
                     try FileManager.default.removeItem(atPath: destPath)
                 }
                 try FileManager.default.copyItem(atPath: sourcePath, toPath: destPath)
@@ -331,11 +304,15 @@ extension RNPushManager {
                 RNPushLog("RNPushManager merge: \(sourceDir)  --->  \(destDir)")
                 var isSourceDirectory: ObjCBool = true
                 var isDestDirectory: ObjCBool = true
-                guard FileManager.default.fileExists(atPath: sourceDir, isDirectory: &isSourceDirectory), isSourceDirectory.boolValue, FileManager.default.fileExists(atPath: destDir, isDirectory: &isDestDirectory), isDestDirectory.boolValue else {
+                guard FileManager.default.fileExists(atPath: sourceDir, isDirectory: &isSourceDirectory), isSourceDirectory.boolValue else {
                     DispatchQueue.main.async {
-                        completion?(nil)
+                        completion?(NSError(domain: "com.RNPush", code: -1, userInfo: ["NSLocalizedFailureErrorKey": "sourceDir不是文件夹"]))
                     }
                     return
+                }
+
+                if !FileManager.default.fileExists(atPath: destDir, isDirectory: &isDestDirectory) {
+                    try FileManager.default.createDirectory(atPath: destDir, withIntermediateDirectories: true, attributes: nil)
                 }
                 
                 for deletePath in deletes {
@@ -384,13 +361,13 @@ extension RNPushManager {
 extension RNPushManager {
     
     // 检测路由是否有效
-    class func validate(module: String = "", route: String) -> Bool {
+    class func validate(module: String, route: String) -> Bool {
         guard let model = RNManifestModel.model(for: module) else { return false }
         return model.routes.contains(route)
     }
     
     // 获取buildHash
-    class func buildHash(for module: String = "") -> String {
+    class func buildHash(for module: String) -> String {
         return RNManifestModel.model(for: module)?.buildHash ?? ""
     }
     
@@ -398,14 +375,14 @@ extension RNPushManager {
         return RNManifestModel.model(from: url)?.buildHash ?? ""
     }
     
-    // 获取所依赖的模块
-    class func dependency(for module: String = "") -> [String] {
-        return RNManifestModel.model(for: module)?.dependency ?? []
+    // 获取所依赖的模块（目前来说所有包依赖于"Base"
+    class func dependency(for module: String) -> [String] {
+        return RNManifestModel.model(for: module)?.dependency ?? ["Base"]
     }
     
     // 获取manifest.json URL
-    class fileprivate func manifestBundleURL(for module: String = "") -> URL? {
-        return RNPushManager.bundleURL(for: module)?.appendingPathComponent("manifest.json")
+    class fileprivate func manifestBundleURL(for module: String) -> URL? {
+        return RNPushManager.bundleURL()?.appendingPathComponent("\(module).manifest.json")
     }
     
     /// 配置文件
@@ -430,6 +407,58 @@ extension RNPushManager {
             model.routes = json["routes"] as? [String] ?? []
             model.dependency = json["dependency"] as? [String] ?? []
             return model
+        }
+    }
+}
+
+/// MARK: 网络相关
+extension RNPushManager {
+    
+    class public func request(_ urlString: String, _ params: [String: Any]? = nil, _ httpMethod: String?, _ completion: ((Data?, URLResponse?, Error?) -> Void)?) {
+        
+        guard let url = URL(string: urlString) else { return }
+        
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
+        request.httpMethod = httpMethod
+        var httpBody = ""
+        if let bodies = params {
+            httpBody = bodies.reduce("") { (result, param) -> String in
+                return "\(result)\(result == "" ? "" : "&")\(param.key)=\(param.value)"
+            }
+            request.httpBody = httpBody.data(using: .utf8)
+        }
+        RNPushLog("RNPushManager  request--request: \(urlString)     --   params : \(httpBody)")
+        
+        let config = URLSessionConfiguration.default
+        let session = URLSession(configuration: config)
+        let task = session.dataTask(with: request) { (data, response, error) in
+            RNPushLog("RNPushManager  request--response:  \(response?.url?.path ?? "")   \(String(describing: data == nil ? "" : String(data: data!, encoding: String.Encoding.utf8)))  \n error: \(String(describing: error))")
+            completion?(data, response, error)
+        }
+        task.resume()
+    }
+    
+    class public func download(urlPath: String, save filePath: String?, progress: ((_ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?, completion: ((_ path: String, _ error: Error?) -> Void)?) {
+        var savePath = filePath
+        if savePath == nil {
+            savePath = RNPushManager.sanboxPath()
+        }
+        
+        RNPushDownloader.download(urlPath: urlPath, save: savePath!, progress: progress, completion: completion)
+    }
+    
+}
+
+/// MARK: 方法替换
+extension RNPushManager {
+    
+    class func swizzling(_ clazz: AnyClass, _ originalSelector: Selector, _ swizzledSelector: Selector) {
+        if let originalMethod = class_getInstanceMethod(clazz, originalSelector), let swizzledMethod = class_getInstanceMethod(clazz, swizzledSelector) {
+            if class_addMethod(clazz, originalSelector, method_getImplementation(swizzledMethod), method_getTypeEncoding(swizzledMethod)) {
+                class_replaceMethod(clazz, swizzledSelector, method_getImplementation(originalMethod), method_getTypeEncoding(originalMethod))
+            } else {
+                method_exchangeImplementations(originalMethod, swizzledMethod)
+            }
         }
     }
 }

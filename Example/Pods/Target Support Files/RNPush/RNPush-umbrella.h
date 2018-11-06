@@ -11,6 +11,7 @@
 #endif
 
 #import "RCTBridge+RNPush.h"
+#import "RCTRootView+RNPush.h"
 
 FOUNDATION_EXPORT double RNPushVersionNumber;
 FOUNDATION_EXPORT const unsigned char RNPushVersionString[];
