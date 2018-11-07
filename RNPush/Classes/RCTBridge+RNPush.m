@@ -83,6 +83,8 @@ static NSString *kExtraModule = @"kExtraModule";
     NSLog(@"RNPushManager  RCTBridge内存警告");
     if (self.automaticReferenceCount == 0) {
         [self reload];
+    } else {
+        self.shouldReloadAfterAutomaticReferenceCountEqualZero = true;
     }
 }
 
