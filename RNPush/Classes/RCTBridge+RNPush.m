@@ -44,6 +44,48 @@ static NSString *kExtraModule = @"kExtraModule";
 
 @implementation RCTBridge (RNPush)
 
+#pragma mark swizzling
++ (void)load {
+    [RCTBridge swizzling:@selector(initWithDelegate:launchOptions:) with:@selector(swizzling_initWithDelegate:launchOptions:)];
+    [RCTBridge swizzling:@selector(reload) with:@selector(swizzling_reload)];
+    [RCTBridge swizzling:NSSelectorFromString(@"dealloc") with:@selector(swizzling_dealloc)];
+}
+
++ (void)swizzling:(SEL)originalSelector with:(SEL)swizzedSelector {
+    Class clazz = RCTBridge.class;
+    Method originalMethod = class_getInstanceMethod(clazz, originalSelector);
+    Method swizzedMethod = class_getInstanceMethod(clazz, swizzedSelector);
+    
+    if (class_addMethod(clazz, originalSelector, method_getImplementation(swizzedMethod), method_getTypeEncoding(swizzedMethod))) {
+        class_replaceMethod(clazz, swizzedSelector, method_getImplementation(originalMethod), method_getTypeEncoding(originalMethod));
+    } else {
+        method_exchangeImplementations(originalMethod, swizzedMethod);
+    }
+}
+
+- (instancetype)swizzling_initWithDelegate:(id<RCTBridgeDelegate>)delegate launchOptions:(NSDictionary *)launchOptions {
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(memoryWarning) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
+    return [self swizzling_initWithDelegate:delegate launchOptions:launchOptions];
+}
+
+- (void)swizzling_reload {
+    self.extraModule = [NSDictionary dictionary];
+    objc_setAssociatedObject(self, &kShouldReloadAfterAutomaticReferenceCountEqualZero, nil, OBJC_ASSOCIATION_ASSIGN);
+    [self swizzling_reload];
+}
+
+- (void)swizzling_dealloc {
+    [NSNotificationCenter.defaultCenter removeObserver:self];
+    [self swizzling_dealloc];
+}
+
+- (void)memoryWarning {
+    NSLog(@"RNPushManager  RCTBridge内存警告");
+    if (self.automaticReferenceCount == 0) {
+        [self reload];
+    }
+}
+
 #pragma mark getter setter
 - (NSInteger)automaticReferenceCount {
     id object = objc_getAssociatedObject(self, &kAutomaticReferenceCount);
@@ -56,8 +98,6 @@ static NSString *kExtraModule = @"kExtraModule";
 
 - (void)setAutomaticReferenceCount:(NSInteger)automaticReferenceCount {
     if (self.shouldReloadAfterAutomaticReferenceCountEqualZero && automaticReferenceCount == 0) {
-        self.extraModule = [NSDictionary dictionary];
-        objc_setAssociatedObject(self, &kShouldReloadAfterAutomaticReferenceCountEqualZero, nil, OBJC_ASSOCIATION_ASSIGN);
         [self reload];
     }
     objc_setAssociatedObject(self, &kAutomaticReferenceCount, [NSNumber numberWithInteger:automaticReferenceCount], OBJC_ASSOCIATION_ASSIGN);
@@ -99,10 +139,10 @@ static NSString *kExtraModule = @"kExtraModule";
     // 已经加载过的module，则不需要重新加载
     if ([self.modules containsObject:module]) {
         onSourceLoad(nil, nil);
-        NSLog(@"RNPushManager  enqueueApplicationModule  yes");
+        NSLog(@"RNPushManager  enqueueApplicationModule added = yes");
         return;
     }
-    NSLog(@"RNPushManager  enqueueApplicationModule  no");
+    NSLog(@"RNPushManager  enqueueApplicationModule  added = no");
     __weak typeof(self) weakSelf = self;
     [RCTJavaScriptLoader loadBundleAtURL:bundleURL onProgress:^(RCTLoadingProgress *progressData) {
 
@@ -144,7 +184,7 @@ static NSString *kExtraModule = @"kExtraModule";
 
 #pragma 加载资源，此方法如果在RCTBridgeDelete 代理loadSourceForBridge:withBlock:中调用，那么reload将会自动重新加载
 - (void)loadSourceWith:(NSArray<NSString *> *)modules at:(NSArray<NSURL *> *)bundleURLs onSourceLoad:(RCTSourceLoadBlock)onSourceLoad {
-    NSLog(@"RNPushManager  enqueueApplicationModules  loadSourceWith: %@", modules);
+    NSLog(@"RNPushManager  loadSourceWith: %@", modules);
     __weak typeof(self) weakSelf = self;
     
     // 优先加载自身的bundleURL，成功后加载其他extraModule
@@ -157,10 +197,10 @@ static NSString *kExtraModule = @"kExtraModule";
         
         __strong typeof(weakSelf) strongSelf = weakSelf;
         if (modules.count != 0) {
-            dispatch_async(dispatch_get_main_queue(), ^{
+            dispatch_after(DISPATCH_TIME_NOW + 0.5, dispatch_get_main_queue(), ^{
                 strongSelf.extraModule = [NSDictionary dictionary];
                 [strongSelf enqueueApplicationModules:modules at:bundleURLs onSourceLoad:^(NSError *error, RCTSource *source) {
-                    
+                    NSLog(@"RNPushManager  loadSourceWith  extras  finish");
                 }];
             });
         }

@@ -18,6 +18,9 @@
  * Updated by wangcong on 2018/11/6.
  * 新增移除已加载module的功能，当有更新退出页面后再次进入则可以立马得到最新
  *
+ * Updated by wangcong on 2018/11/7.
+ * 新增内存警告重新reload（在内存警告时RN页面的资源加载会不正确）
+ *
  */
 @interface RCTBridge (RNPush)
 

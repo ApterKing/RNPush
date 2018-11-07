@@ -7,7 +7,6 @@
 
 import Foundation
 import SSZipArchive
-import WebKit
 
 /// MARK: global
 let kSuitNameKey = "RNPush"

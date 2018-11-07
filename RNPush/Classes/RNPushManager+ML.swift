@@ -22,15 +22,19 @@ public extension RNPushManager {
         RNPushManager.ml_checks(modules) { (_checkSuccess, _shouldReloads) in
             DispatchQueue.main.async {
                 completion?(_checkSuccess ? _shouldReloads : nil)
-
-                if let reloads = _shouldReloads {
-                    if reloads.contains("Base") {
-                        RNPushManager.preloadedBridge?.shouldReloadAfterAutomaticReferenceCountEqualZero = true
-                    }
-                    if reloads.contains(module) {
-                        RNPushManager.preloadedBridge?.deleteModuleIfNeeded(module)
-                    }
+                
+                if _shouldReloads != nil {
+                    RNPushManager.preloadedBridge?.shouldReloadAfterAutomaticReferenceCountEqualZero = true
                 }
+
+//                if let reloads = _shouldReloads {
+//                    if reloads.contains("Base") {
+//                        RNPushManager.preloadedBridge?.shouldReloadAfterAutomaticReferenceCountEqualZero = true
+//                    }
+//                    if reloads.contains(module) {
+//                        RNPushManager.preloadedBridge?.deleteModuleIfNeeded(module)
+//                    }
+//                }
             }
         }
     }
