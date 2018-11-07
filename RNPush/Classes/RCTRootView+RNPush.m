@@ -2,7 +2,7 @@
 //  RCTRootView+RNPush.m
 //  Pods-RNPush_Example
 //
-//  Created by wangcong on 2018/11/5.
+//  Created by wangcong on 2018/11/2.
 //  Copyright © 2018年 medlinker. All rights reserved.
 //
 
@@ -33,7 +33,7 @@
     SEL automaticReferenceCountSEL = NSSelectorFromString(@"automaticReferenceCount");
     SEL setAutomaticReferenceCountSEL =  NSSelectorFromString(@"setAutomaticReferenceCount:");
     if (class_respondsToSelector(clazz, automaticReferenceCountSEL) && class_respondsToSelector(clazz, setAutomaticReferenceCountSEL)) {
-        NSInteger referenceCount = (((NSInteger(*)(id, SEL))objc_msgSend)(bridge, automaticReferenceCountSEL));
+        NSInteger referenceCount = ((NSInteger(*)(id, SEL))objc_msgSend)(bridge, automaticReferenceCountSEL);
         referenceCount += count;
         (((void(*)(id, SEL, NSInteger))objc_msgSend)(bridge, setAutomaticReferenceCountSEL, referenceCount));
     }

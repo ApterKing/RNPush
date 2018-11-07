@@ -2,7 +2,7 @@
 //  RCTRootView+RNPush.h
 //  Pods-RNPush_Example
 //
-//  Created by wangcong on 2018/9/26.
+//  Created by wangcong on 2018/11/2.
 //  Copyright © 2018年 medlinker. All rights reserved.
 //
 

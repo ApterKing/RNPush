@@ -151,15 +151,20 @@ static NSString *kExtraModule = @"kExtraModule";
     [RCTJavaScriptLoader loadBundleAtURL:self.bundleURL onProgress:^(RCTLoadingProgress *progressData) {
         
     } onComplete:^(NSError *error, RCTSource *source) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
         
-        // 在reload时还需要将extraModule重新加载，并且将extraModule置空
+        // 这里需要注意的是，必须优先将bundleURL通知回调完成，才能够继续加载额外模块
+        onSourceLoad(error, source);
+        
+        __strong typeof(weakSelf) strongSelf = weakSelf;
         if (modules.count != 0) {
-            strongSelf.extraModule = [NSDictionary dictionary];
-            [self enqueueApplicationModules:modules at:bundleURLs onSourceLoad:onSourceLoad];
-        } else {
-            onSourceLoad(error, source);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                strongSelf.extraModule = [NSDictionary dictionary];
+                [strongSelf enqueueApplicationModules:modules at:bundleURLs onSourceLoad:^(NSError *error, RCTSource *source) {
+                    
+                }];
+            });
         }
+        
     }];
 }
 

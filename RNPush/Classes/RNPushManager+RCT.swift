@@ -26,14 +26,10 @@ public extension RNPushManager {
         return RCTBridge(delegate: RNPushRCTBridgeDelegate(module, extras), launchOptions: nil)
     }
     
-    class public func preloadBridge(module: String = "Base") {
-//        var extras: [String] = []
-//        if let preloadedModules = preloadedBridge?.modules {
-//            modules.append(contentsOf: preloadedModules)
-//        }
+    class public func preloadBridge(module: String = "Base", extras: [String]? = nil) {
         preloadedBridge?.invalidate()
         preloadedBridge = nil
-        preloadedBridge = bridge(for: module, extras: nil)
+        preloadedBridge = bridge(for: module, extras: extras)
     }
     
 }

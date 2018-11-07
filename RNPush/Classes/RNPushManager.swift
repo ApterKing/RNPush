@@ -69,7 +69,7 @@ public extension RNPushManager {
         
         RNPushManagerMonitor.default.registerNotification()
         rollbackIfNeeded { (_) in
-            preloadBridge()
+            preloadBridge(module: "Base", extras: ["TimeSpace", "AngelQA"])
         }
     }
     
